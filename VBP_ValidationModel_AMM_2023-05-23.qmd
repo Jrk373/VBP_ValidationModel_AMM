@@ -22,17 +22,17 @@ Hello,
 
 This project is a model that compares Report Data with Real Data by comparing the Health Choice Value Based Purchasing Quality Roster (VBPQR)[^1] for Antidepressant Medication Management (AMM) with Health Choice adjudicated claims. This project is similar in many ways to the VBP Validation Model for Follow Up after Hospitalization (FUH)[^2].
 
-[^1]: HEDIS Criteria reference
+[^1]: Health Choice Arizona. (2023). *Value Based Purchasing Quality Roster*
 
-[^2]: HEDIS Criteria reference
+[^2]: Kivela, J.R. (2023). Value Based Purchasing Data Validation Model. *The Northern Arizona Regional Behavioral Health Alliance*.
 
-We are working with many of the same principles on this project; however, the AMM guidelines far more nuanced[^3]. Nonetheless we have endeavored to define the eligible population and compare it against the VBP report.
+The AMM guidelines are far more nuanced[^3]. Nonetheless we have endeavored to define the eligible population and compare it against the VBP report.
 
-[^3]: HEDIS Criteria reference
+[^3]: https://www.ncqa.org/hedis/
 
 The results were great, *(Amazing result to come)*.
 
-We hope you enjoy reading this data story. We are always looking for collaborators to work with, so please reach out and say hello.
+We hope you enjoy reading this data story. We are always looking for collaborators to work with, so please reach out and share your ideas.
 
 Sincerely,
 
@@ -72,86 +72,95 @@ InLineCode <- data.frame(
 
 ## The thing about measuring VBP
 
-So, there we were in the first months of the Alliance ACO business, and EVERY provider was concerned that the Value Based Purchasing Quality Roster was inaccurate. Our providers were concerned that their performance scores were underrated.
+So, there we were in the first months of the Alliance ACO business, and EVERY provider was concerned that the Value Based Purchasing Quality Roster was inaccurate. Our providers were concerned that their performance scores were underrated, not giving them the credit they deserved.
 
-We want our providers to be be their best selves and be recognized. Lack of confidence in the scoring mechanism crowds out enthusiasm and commitment to improvement.
+The Alliance wants its providers to be their best selves and be recognized. Lack of confidence in the scoring mechanism crowds out enthusiasm and damages commitment to improvement.
 
 So, in January 2023 we completed a project that developed a validation model for the Follow Up after Hospitalization (FUH) HEDIS measure. This model was built based on the prior measurement year, and former vendor, Arcadia.
 
-::: {.callout-tip}
+::: callout-tip
+### The VBP Validation Model FUH7 (2023), key takeaways:
 
-### The VBP Validation Model (2023), key takeaways:
-
--   Created a validated data model that can be used to identify eligible member events
+-   Created a validated data model that can be used to identify eligible member events for FUH7
 -   The core of the model can be used to develop future models for other HEDIS/NCQA measures.
--   This research affirmed that the providers were correct. They were indeed underrated for the 2022 measurement year.
-
+-   The research affirmed that the providers were correct. They were indeed underrated for the 2022 measurement year and deserved a higher score by about 4 percentage points.
 :::
 
-Now we arrive to the new measurement year (`r InLineCode$MeasurementYear`), and a new vendor, Cotivity. In this project the VBP Validation Model is going to be applied to the Antidepressant Medication Management (AMM) HEDIS My2023[^4] performance measure. This is the first time that anyone in the HCA network has done this assessment and we hope the results are illuminating.
+### So what's next?
 
-[^4]: HEDIS Criteria reference
+That brings us to the new measurement year, January 2023 to December 2023. There is also a new vendor, Cotivity. In this project the VBP Validation Model is going to be applied to the Antidepressant Medication Management (AMM) HEDIS My2023[^4] performance measure. This is the first time that anyone in the HCA network has done this assessment and we hope the results are illuminating.
 
-This model compares Report Data from the VBP Quality Report with Real Data from adjudicated claims.
+[^4]: https://www.ncqa.org/hedis/
 
-It will answer the following questions:
+This model compares **Report Data** from the VBP Quality Roster with **Real Data** from adjudicated claims.
+
+The model will answer the following questions:
 
 -   How do the results of the Value Based Purchasing Quality Roster (VBPQR) compare against actual adjudicated claims?
 -   Are there mistakes in the report data that have a significant impact on the performance scores of Alliance Providers?
 
-## Return on Investment
-
-Inaccurate measurement of VBP performance leads to an invalid assessment of the Alliance Providers' delivery of services to their patients. It also dampens the spirits of the teams as they do this very difficult work. An accurate measurement offers better opportunity to identify patients in need, maximize financial incentives associated with performance, and support provider morale.
-
-:::{.callout-tip}
-### The business objectives are twofold:
+The business objectives are twofold:
 
 -   Build a data model for validating eligibility for the AMM eligible population
 -   Determine impact of measurement on Alliance ACO performance scores
-:::
 
-# Method
+## Why invest in this research?
+
+Inaccurate measurement of VBP performance leads to an invalid assessment of the Alliance Providers' delivery of services to their patients. In previous years, Alliance providers were underrated on Follow Up after Hospitalization (FUH7) by at least 4 percentage points.
+
+![Alliance Provider performance scores were underated (red blocks) by at least 4 percentage points in 2022](./images/Fig_sup_Compliance.png)
+
+Underrating performance frustrates the leadership and dampens the spirits of the clinical teams as they do this very difficult work.
+
+Accurate measurement offers a better opportunity to identify patients in need, maximize financial incentives associated with performance, and support provider morale.
+
+# Setting up the experiment
 
 This manuscript is written using Brisk-DM. Brisk-DM is a structure for doing data science that is based on CRISP-DM[^5], but tailored for executives and business leads. Brisk-DM uses an approachable communication style that is more understandable to professionals in the workplace.
 
-[^5]: HEDIS Criteria reference
+[^5]: CRISP-DM help overview. (August 17, 2021). https://www.ibm.com/docs/en/spss-modeler/saas?topic=dm-crisp-help-overview.
 
-## Situation Assessment
+## The current state of things
 
-At the time of this writing, The Alliance has received reports through Cotivity for the first 3 months of the 2023 measurement year. Our application of the VBP Validation Model revealed a similar pattern to 2022 where we found that FUH was underrated. These results for FUH are under further investigation while we also develop this model for AMM.
+At the time of this writing, The Alliance has received the first 3 months of VBP Quality Rosters the 2023 measurement year. Our application of the VBP Validation Model for FUH7 in June 2023 revealed a similar pattern to 2022 where we found that FUH was underrated[^6].
 
-## Hablemos de dato *(Let's talk about the data)*
+[^6]: Kivela, J.R. (June 13, 2023). Value Based Purchasing Data Validation Model. *The Northern Arizona Regional Behavioral Health Alliance*. ("./documents/report_updated_2023-03-29_VBPMeasurementValidation.html")
 
-This data model is simple in concept, but complex in design. The model compares report data from the HC VBP Quality Roster with real data from HC adjudicated claims.
+These results for FUH are under further investigation while we develop this model for AMM.
 
-It is more complicated than it sounds because the eligibility equation for AMM is highly nuanced.
+## Hablemos de dato (Let's talk about the data)
+
+This data model is simple in concept, but complex in design. The model compares *Report Data* from the HC VBP Quality Roster with *Real Data* from Health Choice adjudicated claims.
 
 ### What are the data sources?
 
-+----------------------------------------------------------------------------------------------------------------------------------+------------+-----------------------------------------------------------------------------------+
-| Health Choice VBP Quality Roster (QR)                                                                                            |            | Health Choice Adjudicated Claims                                                  |
-+:=================================================================================================================================+============+:==================================================================================+
-| -   An excel workbook containing a roster of the members deemed eligible for VBP HEDIS NCQA measures and their compliance status |            | -   A data set of adjudicated claims queried directly from the HCA data warehouse |
-|                                                                                                                                  |            |                                                                                   |
-| -   The Alliance receives individual rosters for each Alliance Provider                                                          |            | -   Claims are extracted for all eligible service codes for the measurement year  |
-+----------------------------------------------------------------------------------------------------------------------------------+------------+-----------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------+---+-----------------------------------------------------------------------------------+
+| VBP Quality Roster                                                                                                               |   | Adjudicated Claims                                                                |
++:=================================================================================================================================+===+:==================================================================================+
+| -   Health Choice receives this data from third party vendor, Cotivity                                                           |   | -   A data set of adjudicated claims queried directly from the HCA data warehouse |
+|                                                                                                                                  |   |                                                                                   |
+| -   An excel workbook containing a roster of the members deemed eligible for VBP HEDIS NCQA measures and their compliance status |   | -   Records are gathered from the Claims and PBM databases                        |
+|                                                                                                                                  |   |                                                                                   |
+| -   The Alliance receives individual rosters for each Alliance Provider                                                          |   | -   Claims are extracted for all eligible service codes for the measurement year  |
++----------------------------------------------------------------------------------------------------------------------------------+---+-----------------------------------------------------------------------------------+
 
-### Son los datos de calidad? *(Is the data any good?)*
+### Is the data we use reliable?
 
-+-------------------------------------------------------------------------------------------------------------------------+------------+--------------------------------------------------------------------------------------------------------------------------------------+
-| Health Choice VBP Quality Roster (QR)                                                                                   |            | Health Choice Adjudicated Claims                                                                                                     |
-+:========================================================================================================================+============+:=====================================================================================================================================+
-| -   Report quality is very high as it is compiled by Health Choice Business Intelligence staff.                         |            | -   Claims data is of the highest quality as it is compiled and reviewed extensively by Health Choice for its own business purposes. |
-|                                                                                                                         |            |                                                                                                                                      |
-| -   The outstanding question with the VBPQR is if the underlying data from the third party vendor Cotivity is accurate. |            | -   The quality of this data is also reviewed by state and federal regulation entities, like AHCCCS                                  |
-+-------------------------------------------------------------------------------------------------------------------------+------------+--------------------------------------------------------------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------------------------+---+--------------------------------------------------------------------------------------------------------------------------------------+
+| VBP Quality Roster                                                                                                      |   | Adjudicated Claims                                                                                                                   |
++:========================================================================================================================+===+:=====================================================================================================================================+
+| -   The outstanding question with the VBPQR is if the underlying data from the third party vendor Cotivity is accurate. |   | -   Claims data is of the highest quality as it is compiled and reviewed extensively by Health Choice for its own business purposes. |
+|                                                                                                                         |   |                                                                                                                                      |
+| -   The report quality itslef is very high as it is compiled by Health Choice Business Intelligence staff.              |   | -   The quality of this data is also reviewed by state and federal regulation entities, like AHCCCS                                  |
+|                                                                                                                         |   |                                                                                                                                      |
+| -   The underlying data is what is under investigation                                                                  |   |                                                                                                                                      |
++-------------------------------------------------------------------------------------------------------------------------+---+--------------------------------------------------------------------------------------------------------------------------------------+
 
 ## The AMM Eligibility Model
 
 We now embark upon building a data set of eligible claims for the AMM measure. This process will be significantly more complicated than our previous model for FUH. The description of an eligible member event is very nuanced for AMM, but in short...
 
-::: {.callout-tip} 
-
+::: callout-tip
 ### An eligible member event is defined as follows:
 
 -   The individual is an adult, aged 18 or older, **and**
@@ -160,113 +169,12 @@ We now embark upon building a data set of eligible claims for the AMM measure. T
 -   The individual had a service for one of the eligible Major Depressive Disorders (***Test for Major Depressive Disorder (MDDx)***) within 60 days (-60 days before, or +60 days after), **and**
 -   The individual had continuous enrollment (***Test for Continuous Enrollment (CE)***)for
     -   105 days before the IPSD, **and**
-    -   231 days after the IPSD 
+    -   231 days after the IPSD
 :::
 
-Check out the visualization of the model below. There are many components of this model with overlapping time frames. We will describe these steps in further detail in the next section.
+Check out the visualization of the AMM Eligibility Model below. There are many components of this model with overlapping time frames. We will describe these steps in further detail in the next section.
 
 ![AMM Eligibility Model (Kivela, 2023)](./data/DataModel/Graphic_AMMEligibilityModel2023.png)
-
-### National Drug Code to Generic Product Identifier Crosswalk
-
-::: panel-tabset
-#### Description {#sec-description}
-
-NDC to GPI Crosswalk
-
-Because HCA categorizes their PBM claims in terms of Generic Product Identifier (GPI), but NCQA does theirs in terms of National Drug Code (NDC), we have to crosswalk the eligible AMM medications from NDC to their corresponding GPI codes. Fortunately, it's totally not a pain in the neck to backwards engineer this at all, lol.
-
-#### Procedure {#sec-procedure}
-
-In order to create a cross walk that ties the NDC codes from NCQA to the GPI codes from Health Choice, we took the following steps:
-
--   Import the My2023 Medication to Code data from the My2023 Medication List Directory[^6]
--   Filter the data to only include Antidepressant Medications
--   Rename some columns to provide consistency across tables
--   Import the AHCCCS Preferred Drug List [^7]. A side by side list of NDC and GPI codes is incredibly difficult to come by, and so we are using this list from 2019. Fortunately NDC and GPI are very stable.
--   Rename some columns to provide consistency across tables.
--   Filter Therapeutic Class for Antidepressant Other, Antidepressant SSRI
--   Merge the NCQA data set with the AHCCCS data set by matching on the the NDC variable.
-
-#### Code {#sec-code}
-
-```{r}
-#| label: CreateRxIdentifierCrosswalk
-#| eval: false
-#| include: true
-#| echo: true
-#| code-fold: show
-#| warning: false
-#| error: false
-
-# Covert NDC to GPI
-
-#import the My2023 Medications to Code data set
-Med_To_NDC <- read.csv("./data/My2023MedicationToCode.csv")
-
-Med_To_NDC_AMM <- Med_To_NDC |> 
-  filter(Medication.List.Name == "Antidepressant Medications") |> 
-  select(
-    Medication.List.Name,
-    Code,
-    Generic.Product.Name
-  )
-
-colnames(Med_To_NDC_AMM)[colnames(Med_To_NDC_AMM) == "Code"] <- "NDC_NationalDrugCode"
-
-colnames(Med_To_NDC_AMM)[colnames(Med_To_NDC_AMM) == "Medication.List.Name"] <- "MedicationList"
-
-colnames(Med_To_NDC_AMM)[colnames(Med_To_NDC_AMM) == "Generic.Product.Name"] <- "GenericProductName"
-
-# Import AHCCCS Preferred drug list
-NDC_To_GPI <- read.csv("./data/AHCCCS_PreferredDrugListChangesFor_08012019.csv")
-
-colnames(NDC_To_GPI)[colnames(NDC_To_GPI) == "Therapeutic.Class...Market.Basket"] <- "TherepeuticClass"
-
-colnames(NDC_To_GPI)[colnames(NDC_To_GPI) == "National.Drug.Code..NDC..MediSpan"] <- "NDC_NationalDrugCode"
-
-colnames(NDC_To_GPI)[colnames(NDC_To_GPI) == "MediSpan.Generic.Product.Indicator..GPI."] <- "GPI_GenericProductIdentifier"
-
-
-NDC_To_GPI_AMM <- NDC_To_GPI |> 
-  filter(c(TherepeuticClass == "ANTIDEPRESSANTS, OTHER" | TherepeuticClass ==  "ANTIDEPRESSANTS, SSRIs")) |> 
-  select(NDC_NationalDrugCode,
-         GPI_GenericProductIdentifier,
-         TherepeuticClass)
-
-# merge then filter for only AHCCCS preferred medications
-
-# So these are all of the ones from NCQA that AHCCCS has on thier list. And now we have our crosswalk to address claims. 
-
-My2023NDCtoGPICrosswalk <- merge(
-  x = Med_To_NDC_AMM,
-  y = NDC_To_GPI_AMM,
-  by = "NDC_NationalDrugCode",
-  all.y = TRUE
-) |> 
-  select(
-    MedicationList,
-    TherepeuticClass,
-    NDC_NationalDrugCode,
-    GPI_GenericProductIdentifier,
-    GenericProductName
-  ) |> 
-  na.omit()
-
-# write.csv(My2023NDCtoGPICrosswalk, "./data/output/My2023NDCtoGPICrosswalk.csv")
-
-concatenated_values_GPI <- paste0("'",    My2023NDCtoGPICrosswalk$GPI_GenericProductIdentifier, "'", collapse = ", ")
-
-```
-:::
-
-[^6]: HEDIS Criteria reference
-
-[^7]: HEDIS Criteria reference
-
-### El Dato Verdad *(The Real Data)*
-
-Now we have to start the arduous process of describing the eligible population. The criteria are complicated. The logic is convoluted. And the syntax is confusing.
 
 Refer to the visualization above, or think of the criteria as a tumbling bike lock.
 
@@ -279,14 +187,16 @@ Refer to the visualization above, or think of the criteria as a tumbling bike lo
 | -   Continuous Enrollment (CE)           |                                                                                                                 |
 +------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
 
-All four criteria must line up, *in the right order*, for the lock to open. Once unlocked, the resulting data set es El Dato Verdad, the Real Data.
+All four criteria must line up, *in the right order*, for the lock to open. Once unlocked, the resulting data set es El Dato Verdad, the **Real Data**.
 
-### The Index Prescription Start Date (IPSD)
+### The Index Prescription Start Date 
+
+The first criteria that must be met is the Index Prescription Start Date (IPSD). This is the date that an individual filled a prescription for one of the HEDIS My 2023 eligible medications. 
 
 ::: panel-tabset
 #### Description
 
-The Index Prescription Start Date (IPSD) is the anchor point for the rest of the eligibility measures. An individual must have an eligible IPSD in order to be assessed against the other tests for this measure.
+The IPSD is the anchor point for the rest of the eligibility measures. An individual must have an eligible IPSD in order to be assessed against the other tests for this measure.
 
 The member must have a prescription refill for an eligible Antidepressant Medication between the eligible dates indicated in the visualization above.
 
@@ -359,6 +269,42 @@ WHERE
 	pbm.GpiNumber IN (concatenated_values_GPI)
 
 ```
+
+```{r}
+#| label: IPSDTest
+#| eval: false
+#| include: true
+#| echo: true 
+#| code-fold: show
+#| warning: false
+#| error: false
+
+# Import the raw claims
+PBMClaims <- read.csv("./data/DataRaw_PBMClaims_2023-05-31.csv")
+
+# Convert numeric variable to date
+PBMClaims$dtefilled <- as.Date(as.character(PBMClaims$dtefilled), format = "%Y%m%d")
+
+# Convert character variable to date
+PBMClaims$AsOfDate <- as.Date(PBMClaims$AsOfDate, format = "%m/%d/%Y")
+
+# write.csv(PBMClaims, "./data/output/PBMClaims.csv")
+
+PBMClaims_NMHTest <- PBMClaims
+
+# Convert the 'dtefilled' column to Date type if it's not already in the correct format
+PBMClaims_NMHTest$dtefilled <- as.Date(PBMClaims_NMHTest$dtefilled)
+
+# Define the start and end dates for IPSDTestResult
+ip_start_date <- as.Date("2022-05-01")
+ip_end_date <- as.Date("2023-04-30")
+
+# Create the IPSDTestResult column based on the date conditions
+# A result of "TRUE" indicates a positive IPSD
+PBMClaims_NMHTest$IPSDTestResult <- ifelse(
+  PBMClaims_NMHTest$dtefilled >= ip_start_date 
+  & PBMClaims_NMHTest$dtefilled <= ip_end_date, "TRUE", "FALSE")
+```
 :::
 
 ### Test for Negative Medication History (NMH)
@@ -368,7 +314,7 @@ WHERE
 
 **The Test for Negative Medication History** determines if an individual is a new recipient of an antidepressant medication. An individual passes this test if they have **not** had a prescription for an antidepressant medication within 105 days **prior to** the IPSD.
 
-**Be patient.** This part of the program takes about 20 minutes to run. If you think about what it is doing, it is comparing every row of claims (~147,000 rows) against the IPSD Intake Period range, and for all of the positive returns, comparing each one to each of the the original 147,000 rows for the NMH test. 
+**Be patient.** This part of the program takes about 20 minutes to run. If you think about what it is doing, it is comparing every row of claims (\~147,000 rows) against the IPSD Intake Period range, and for all of the positive returns, comparing each one to each of the the original 147,000 rows for the NMH test.
 
 Think about trying to guess the first 2 numbers on the bike lock, multiplied by 147,000. Anyway, it's a lot. Go grab some coffee.
 
@@ -402,44 +348,8 @@ Be patient. This part of the program takes about 20 minutes to run. If you think
 This is the code my friends
 
 ```{r}
-#| label: IPSDTest
-#| eval: true
-#| include: true
-#| echo: true 
-#| code-fold: show
-#| warning: false
-#| error: false
-
-# Import the raw claims
-PBMClaims <- read.csv("./data/DataRaw_PBMClaims_2023-05-31.csv")
-
-# Convert numeric variable to date
-PBMClaims$dtefilled <- as.Date(as.character(PBMClaims$dtefilled), format = "%Y%m%d")
-
-# Convert character variable to date
-PBMClaims$AsOfDate <- as.Date(PBMClaims$AsOfDate, format = "%m/%d/%Y")
-
-# write.csv(PBMClaims, "./data/output/PBMClaims.csv")
-
-PBMClaims_NMHTest <- PBMClaims
-
-# Convert the 'dtefilled' column to Date type if it's not already in the correct format
-PBMClaims_NMHTest$dtefilled <- as.Date(PBMClaims_NMHTest$dtefilled)
-
-# Define the start and end dates for IPSDTestResult
-ip_start_date <- as.Date("2022-05-01")
-ip_end_date <- as.Date("2023-04-30")
-
-# Create the IPSDTestResult column based on the date conditions
-# A result of "TRUE" indicates a positive IPSD
-PBMClaims_NMHTest$IPSDTestResult <- ifelse(
-  PBMClaims_NMHTest$dtefilled >= ip_start_date 
-  & PBMClaims_NMHTest$dtefilled <= ip_end_date, "TRUE", "FALSE")
-```
-
-```{r}
 #| label: NMHTest
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| code-fold: show
@@ -478,7 +388,6 @@ for (i in 1:nrow(PBMClaims_NMHTest)) {
 :::
 
 ::: callout-tip
-
 ### Fantastico!
 
 Wow! I can't believe that we actually pulled that off!
@@ -488,18 +397,16 @@ Now we have our confirmation of IPSD and NMH.
 Two down, two to go. Awesome!
 
 Next up is to determine if there was an eligible diagnosis
-
 :::
 
 ### Test for Major Depressive Disorder
 
 The next stop on the road is to confirm that the individual had a service for one of the eligible Major Depressive Disorders (MDDx) within 60 days, (-60 days before, or +60 days after).
 
-::: {.panel-tabset}
-
+::: panel-tabset
 #### Description
 
-Great text to go here
+A diagnosis of Major Depressive Disorder is identified by cross referencing members with eligible IPSD and NMH, which is determined using PBM records, against claims records from the Claims database. Individual identifying data is used to join PBM records with claims records. 
 
 #### Procedure
 
@@ -660,45 +567,42 @@ PBMClaims_MDDxTest$MDDxTestResult <- ifelse(abs(as.numeric(as.Date(PBMClaims_MDD
 PBMClaims_MDDxTest <- PBMClaims_MDDxTest[, c("PrimaryId","clientID", "dtefilled",  "IPSDTestResult", "NMHTestResult" , "MDDxTestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "AmtPaidFinal")]
 
 ```
-
 :::
 
 ::: callout-tip
-
 ### Woo hoo! It worked!
 
-Three down, one to go. Awesome!
+
 
 We have now determined that there is:
 
-  1.    A valid Index Prescription Start Date
-  2.    A Negative Medication History
-  3.    A valid service for Major Depressive Disorder
-
+1.  A valid Index Prescription Start Date
+2.  A Negative Medication History
+3.  A valid service for Major Depressive Disorder
 :::
 
 ### Test for Continuous Enrollment
 
-Now that we have confirmed IPSD, NMH, and MDDx, we will compare the member information against our enrollment records to dtermine there was an eligible enrollment period assoicated with the prescription fill.
+Ok, three down, one to go. Awesome!
 
-::: {.panel-tabset}
+Now that we have confirmed IPSD, NMH, and MDDx, we will compare the member information against our enrollment records to determine there was an eligible enrollment period associated with the prescription fill.
+
+::: panel-tabset
 #### Description
 
 An event is eligible if the individual had continuous enrollment for -105 days before the IPSD, **AND** +231 days after the IPSD.
+
+The result is a big data solution, error, etc. 
 
 #### Procedure
 
 Ok, so what do we do here???
 
-Take our main table, now called PBMClaims_MDDxTest. Compare the PrimaryId Associated with the event against our member enrollment roster developed in the Alliance Progress Report [^_]. This is the full global members roster because we are not filtering for active membership only. Individuals who are currently disenrolled are included as well.
+Take our main table, now called PBMClaims_MDDxTest. Compare the PrimaryId Associated with the event against our member enrollment roster developed in the Alliance Progress Report [^9]. This is the full global members roster because we are not filtering for active membership only. Individuals who are currently disenrolled are included as well.
 
 First, confirm if the eligible event matches anyone on the enrollment roster.
 
-If yes, the compare:
-  1.    The IPSD against the enrollment date and confirm that enrollment date is at least 105 days before the IPSD
-  2.    The IPSD against the disenrollment date and confirm that the disenrollment date is at least 213 days after the IPSD
-
-[^_]: Alliance progress report (Kivela 2023)
+If yes, the compare: 1. The IPSD against the enrollment date and confirm that enrollment date is at least 105 days before the IPSD 2. The IPSD against the disenrollment date and confirm that the disenrollment date is at least 213 days after the IPSD
 
 #### Code
 
@@ -800,9 +704,9 @@ AMMEligibilityTest <- AMMEligibilityTest %>%
 # write.csv(AMMEligibilityTest, "./data/output/AMMEligibilityTest_Copy.csv")
 
 ```
-
 :::
 
+[^9]: Alliance progress report (Kivela 2023)
 
 ## Value-based Purchasing Quality Reports (VBP QR)
 
@@ -957,3 +861,104 @@ VBPQR_AllAPsCombined_Cleaned <- VBPQR_AllAPsCombined_Cleaned |>
 # write.csv(VBPQR_AllAPsCombined_Cleaned, "./data/output/VBPMeasurementValidation/VBP_Validation.csv")
 
 ```
+
+# Appendix
+### Create a GPI to NDC crosswalk
+
+Because HCA categorizes their PBM claims in terms of Generic Product Identifier (GPI), but NCQA does theirs in terms of National Drug Code (NDC), we have to crosswalk the eligible AMM medications from NDC to their corresponding GPI codes. Fortunately, it's totally not a pain in the neck to backwards engineer this at all, lol.
+
+::: panel-tabset
+#### Description {#sec-description}
+
+The HEDIS My2023 Medication List Names identifies the eligible medications by providing the respective NDC numbers[^7]. The AHCCCS Preferred Drug List is used to match NDC numbers to GPI numbers based on medication name[^8].
+
+[^7]: https://www.ncqa.org/hedis/
+[^8]: AHCCCS Preferred Drug List. *Arizona Health Care Cost Containment System*. https://www.azahcccs.gov/Members/Pharmacy/
+
+#### Procedure {#sec-procedure}
+
+In order to create a cross walk that ties the NDC codes from NCQA to the GPI codes from Health Choice, we took the following steps:
+
+-   Import the My2023 Medication to Code data from the My2023 Medication List Directory[^7]
+-   Filter the data to only include Antidepressant Medications
+-   Rename some columns to provide consistency across tables
+-   Import the AHCCCS Preferred Drug List [^8]. A side by side list of NDC and GPI codes is incredibly difficult to come by, and so we are using this list from 2019. Fortunately NDC and GPI are very stable.
+-   Rename some columns to provide consistency across tables.
+-   Filter Therapeutic Class for Antidepressant Other, Antidepressant SSRI
+-   Merge the NCQA data set with the AHCCCS data set by matching on the the NDC variable.
+
+#### Code {#sec-code}
+
+```{r}
+#| label: CreateRxIdentifierCrosswalk
+#| eval: false
+#| include: true
+#| echo: true
+#| code-fold: show
+#| warning: false
+#| error: false
+
+# Covert NDC to GPI
+
+#import the My2023 Medications to Code data set
+Med_To_NDC <- read.csv("./data/My2023MedicationToCode.csv")
+
+Med_To_NDC_AMM <- Med_To_NDC |> 
+  filter(Medication.List.Name == "Antidepressant Medications") |> 
+  select(
+    Medication.List.Name,
+    Code,
+    Generic.Product.Name
+  )
+
+colnames(Med_To_NDC_AMM)[colnames(Med_To_NDC_AMM) == "Code"] <- "NDC_NationalDrugCode"
+
+colnames(Med_To_NDC_AMM)[colnames(Med_To_NDC_AMM) == "Medication.List.Name"] <- "MedicationList"
+
+colnames(Med_To_NDC_AMM)[colnames(Med_To_NDC_AMM) == "Generic.Product.Name"] <- "GenericProductName"
+
+# Import AHCCCS Preferred drug list
+NDC_To_GPI <- read.csv("./data/AHCCCS_PreferredDrugListChangesFor_08012019.csv")
+
+colnames(NDC_To_GPI)[colnames(NDC_To_GPI) == "Therapeutic.Class...Market.Basket"] <- "TherepeuticClass"
+
+colnames(NDC_To_GPI)[colnames(NDC_To_GPI) == "National.Drug.Code..NDC..MediSpan"] <- "NDC_NationalDrugCode"
+
+colnames(NDC_To_GPI)[colnames(NDC_To_GPI) == "MediSpan.Generic.Product.Indicator..GPI."] <- "GPI_GenericProductIdentifier"
+
+
+NDC_To_GPI_AMM <- NDC_To_GPI |> 
+  filter(c(TherepeuticClass == "ANTIDEPRESSANTS, OTHER" | TherepeuticClass ==  "ANTIDEPRESSANTS, SSRIs")) |> 
+  select(NDC_NationalDrugCode,
+         GPI_GenericProductIdentifier,
+         TherepeuticClass)
+
+# merge then filter for only AHCCCS preferred medications
+
+# So these are all of the ones from NCQA that AHCCCS has on thier list. And now we have our crosswalk to address claims. 
+
+My2023NDCtoGPICrosswalk <- merge(
+  x = Med_To_NDC_AMM,
+  y = NDC_To_GPI_AMM,
+  by = "NDC_NationalDrugCode",
+  all.y = TRUE
+) |> 
+  select(
+    MedicationList,
+    TherepeuticClass,
+    NDC_NationalDrugCode,
+    GPI_GenericProductIdentifier,
+    GenericProductName
+  ) |> 
+  na.omit()
+
+# write.csv(My2023NDCtoGPICrosswalk, "./data/output/My2023NDCtoGPICrosswalk.csv")
+
+concatenated_values_GPI <- paste0("'",    My2023NDCtoGPICrosswalk$GPI_GenericProductIdentifier, "'", collapse = ", ")
+
+```
+:::
+
+[^7]: HEDIS Criteria reference
+
+[^8]: HEDIS Criteria reference
