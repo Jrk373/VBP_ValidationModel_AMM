@@ -1,0 +1,74 @@
+---
+title: "ScratchPaper"
+format: html
+editor: visual
+---
+
+```{r}
+#| eval: false
+
+```
+
+# Table Template
+
+\| Header \| Header
+
+\|:\-\-\-\--\|:\-\-\-\--\|
+
+\| - Content \| - Content \|
+
+\| - Content \| - Content \|
+
+\| - Content \| - Content \|
+
+\# Introduction
+
+\## Who we are, where we come from
+
+The Alliance ACO is a first of its kind Accountable Care Organization that is a subsidiary of Health Choice\[\^\_\] and The Narbha Institute\[\^\_\]. The Alliance is composed 8 companies that provide integrated behavioral health services for over 100,000 people throughout the 5 northern counties of Arizona.
+
+\[\^\_\]: Health Choice Arizona \<https://www.healthchoiceaz.com/\>
+
+\[\^\_\]: The Narbha Institute \<https://www.narbha.org\>
+
+Alliance Providers (AP) serve medicaid members of the AHCCCS Complete Care program \[\^5\]. The Alliance is a participant in the Health Choice Value Based Purchasing Program. Performance for the \`r MeasurementYear\` contract year is measured against 3 HEDIS measures endorsed by NCQA. These are \*AMM2\*, \*FUH7\*, and \*HDO\*\[\^6\].
+
+\[\^8\]: Cotivity \<https://www.cotiviti.com/\\\>
+
+\[\^8\]: Kivela J.R., McMillian, J. & Tewa, V. (2023) Alliance ACO Progress Report, January 2023. \*The Northern Arizona Regional Behavioral Health Alliance\*.
+
+\[\^9\]: Kivela, J.R. (2023). Value Based Purchasing Validation Model. \*The Northern Arizona Regional Behavioral Health Alliance\*.
+
+\### Success Criteria
+
+Success of this project will be the creation of a data model that accurately identifies eligible cases from pharmacy and behavioral health claims, successfully aggregates Health Choice Value Based Purchasing Quality Rosters (formerly VBP Quality Reports), and subsequently validates the VBPQR against adjudicate claims. A positive validation indicates that the third party vendor, Cotivity in this case, is accurately identifying eligible member events.
+
+\## Translate to analytical objectives (Determine Project Goals)
+
+1\. Codify the parameters of NCQA/HEDIS My2023 \[\^9\]
+
+2\. Extract claims data from HCA Data Warehouse
+
+3\. Aggregate HCA VBPQR
+
+4\. Validate VBPQR against Adjudicated Claims
+
+\[\^9\]: Reference
+
+\### Clearly understand how action can be taken based on outcomes
+
+There are 2 key actions that may be taken based on the results of the validation study. The first is that inaccuracy can be addressed at the case level to reconcile any significant differences in measurement and confirm that Alliance Providers are receiving due credit for their work. The second is that Alliance Providers will have the most accurate information for follow up with Alliance members in need.
+
+```{r}
+\# \# set date format for report date
+
+\# VBPQR_AllAPsCombined_Cleaned\$\`Data Period\` \<- as.numeric(VBPQR_AllAPsCombined_Cleaned\$\`Data Period\`)
+
+\# VBPQR_AllAPsCombined_Cleaned\$\`Data Period\` \<- as.Date(VBPQR_AllAPsCombined_Cleaned\$\`Data Period\`, origin = "1899-12-30")
+
+\# \# update data types
+
+\# VBPQR_AllAPsCombined_Cleaned\$Numerator \<- as.numeric(VBPQR_AllAPsCombined_Cleaned\$Numerator)
+
+\# VBPQR_AllAPsCombined_Cleaned\$TotalEligible \<- as.numeric(VBPQR_AllAPsCombined_Cleaned\$Denominator)
+```
