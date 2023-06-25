@@ -726,8 +726,9 @@ The following set of instructions outline how the VBP QR is input from the origi
 
 ```{r}
 #| label: Load Data
+#| eval: false
 #| include: true
-#| echo: true
+#| echo: true 
 #| warning: false
 #| error: false
 
@@ -796,8 +797,9 @@ That was a lot. Basically, we just imported disparate VBP Quality Rosters for ea
 
 ```{r}
 #| label: CreateVBPQRDataSet
+#| eval: false
 #| include: true
-#| echo: true
+#| echo: true 
 #| warning: false
 #| error: false
 
@@ -873,7 +875,68 @@ This model extracts data from multiple VBP Quality Reports and aggregates it the
 The validation of VBP cases against adjudicated claims will tell us if the reports received through Health Choice's 3rd party vendor are reliable and valid. 
 
 
+::: panel-tabset
 
+### Test Design
+
+Image of test design here
+
+### Procedure
+
+#### VBP Quality Roster Reports
+
+***The VBPQR_AllAPsCombined_Cleaned*** data frame was loaded to the test model. The data was summarized, per member, by counting the instances of eligibility per member. This creates a vector of unduplicated Member IDs called ***VBP_Unduplicated***.
+
+#### Adjudicated Claims
+
+The ***IPClaims_validation*** data frame was loaded to the test model. The claims data was then summarized by counting the instances of HEDIS My2022 eligible claims per member. This creates a vector of unduplicated Member IDs called ***Claims_Unduplicated***.
+
+### Code
+
+#### VBP Quality Roster Reports
+
+```{r}
+#| label: VBP Unduplicated
+#| eval: false
+#| include: true
+#| echo: true 
+#| warning: false
+#| error: false
+
+VBP_Unduplicated <- VBPQR_AllAPsCombined_Cleaned |> 
+  group_by(`Member ID`) |> 
+  rename("MemberID" = `Member ID`) |> 
+  count()
+
+# write.csv(VBP_Unduplicated, "./data/output/VBPMeasurementValidation/VBP_Unduplicated.csv")
+```
+
+#### Adjudicated Claims
+
+```{r}
+#| label: Adjudicated Claims Unduplicated
+#| eval: false
+#| include: true
+#| echo: true 
+#| warning: false
+#| error: false
+
+AMMClaims_validation <- AMMEligibilityTest |> 
+  select(MemberID,
+         svccode)
+
+# write.csv(IPClaims_validation, "./data/output/VBPMeasurementValidation/IPClaims_Validation.csv")
+
+
+IPClaims_Unduplicated <- IPClaims_validation |> 
+  filter(MemberID != "NULL") |> 
+  group_by(MemberID) |> 
+  count()
+
+# write.csv(IPClaims_Unduplicated, "./data/output/VBPMeasurementValidation/IPClaims_Unduplicated.csv")
+```
+
+:::
 
 
 # Appendix
