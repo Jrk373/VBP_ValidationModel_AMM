@@ -212,6 +212,8 @@ The 12 month Intake Period begins on May 1 of the *year prior* to the Measuremen
 
 -   We extract claims from the *PBM database* at the Health Choice data warehouse for the given My2023 eligible medications dispensed within the Intake Period.
 
+-   The NDC to GPI crosswalk must be used to determine eligible medications. The code to create the crosswalk is in the Appendix.
+
 -   The minimum date of the Test for Negative Medication History must also be included in the PBM Claims query. The test for NMH is outlined below.
 
 -   The Negative Medication History range is: *`r InLineCode$NegativeMedicationHistory`*
@@ -849,18 +851,30 @@ VBPQR_AllAPsCombined_AMMMemberID <- VBPQR_AllAPsCombined_AMM |>
 
 # create a duplicate at this phase to be used in later evaluation
 VBPQR_AllAPsCombined_Cleaned2 <- VBPQR_AllAPsCombined_Cleaned |> 
-  filter(`SubMeasure ID` == "FUH")
+  filter(`SubMeasure ID` == "AMM")
 
 # write.csv(VBPQR_AllAPsCombined_Cleaned2, "./data/output/VBPMeasurementValidation/VBPQR_AllAPsCombined_Cleaned2.csv")
 
 # Isolate member ID for the validation
 VBPQR_AllAPsCombined_Cleaned <- VBPQR_AllAPsCombined_Cleaned |> 
-  filter(`SubMeasure ID` == "FUH") |> 
+  filter(`SubMeasure ID` == "AMM") |> 
   select(`Member ID`)
 
 # write.csv(VBPQR_AllAPsCombined_Cleaned, "./data/output/VBPMeasurementValidation/VBP_Validation.csv")
 
 ```
+
+## AMM Validation Data Modeling
+
+The terms for the Validation Model for AMM are *Conceptual* and *Logical*. This model will help to define the systems surrounding measurement of AMM. This model also outlines a set of logical rules and structures of data to be used across agencies. 
+
+This model extracts data from multiple VBP Quality Reports and aggregates it them into a single data set. It also collects adjudicated claims data from the Health Choice data warehouse. 
+
+The validation of VBP cases against adjudicated claims will tell us if the reports received through Health Choice's 3rd party vendor are reliable and valid. 
+
+
+
+
 
 # Appendix
 ### Create a GPI to NDC crosswalk
