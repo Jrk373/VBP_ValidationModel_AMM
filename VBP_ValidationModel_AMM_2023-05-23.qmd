@@ -454,7 +454,6 @@ concatenated_values_MDDx <- paste0("(",    ValueSetListMy2023$Code, ")", collaps
 #| echo: true 
 #| warning: false
 #| error: false
-
 -- Declare start and end variables
 DECLARE @start DATE = '2022-03-22';
 DECLARE @end DATE = '2023-10-30';
@@ -493,6 +492,7 @@ VALUES ('101'), ('100'), ('207'), ('116'), ('126'), ('136'), ('146'), ('156'), (
 -- Query to retrieve data from the claims.dbo.shcavos table
 SELECT DISTINCT
 	shcavos.primaryID, 
+	id.BCBSMedicaidId AS MemberID,
     shcavos.begDate,
     shcavos.PrimaryDiagnosis,
     shcavos.Dx1,
@@ -509,6 +509,7 @@ SELECT DISTINCT
     shcavos.Dx12,
     CASE WHEN v.Code IS NOT NULL THEN 'True' ELSE 'False' END AS MatchFound
 FROM claims.dbo.shcavos AS shcavos
+LEFT JOIN GlobalMembers.dbo.ClientIdPlus id ON shcavos.primaryID = id.primaryID
 LEFT JOIN #ValueSetListMy2023 AS v ON shcavos.PrimaryDiagnosis COLLATE SQL_Latin1_General_CP1_CI_AS = v.Code
                                     OR shcavos.Dx1 COLLATE SQL_Latin1_General_CP1_CI_AS = v.Code
                                     OR shcavos.Dx2 COLLATE SQL_Latin1_General_CP1_CI_AS = v.Code
@@ -558,7 +559,7 @@ MDDxClaimsTest <- MDDxClaims %>%
   rename(PrimaryId = primaryID)
 
 # Merge PBMClaims_NMHTest and MDDxClaims on PrimaryId, keeping all rows and columns
-PBMClaims_MDDxMerge <- merge(x = PBMClaims_NMHTest, y = MDDxClaimsTest, by = "PrimaryId", all.x = TRUE)
+PBMClaims_MDDxMerge <- merge(x = PBMClaims_NMHTest, y = MDDxClaimsTest, by = "PrimaryId", all = TRUE)
 
 PBMClaims_MDDxTest <- PBMClaims_MDDxMerge
 
@@ -566,7 +567,7 @@ PBMClaims_MDDxTest <- PBMClaims_MDDxMerge
 PBMClaims_MDDxTest$MDDxTestResult <- ifelse(abs(as.numeric(as.Date(PBMClaims_MDDxTest$begDate) - as.Date(PBMClaims_MDDxTest$dtefilled))) <= 60, TRUE, FALSE)
 
 # Select the columns of interest, change name to _MDDXTest
-PBMClaims_MDDxTest <- PBMClaims_MDDxTest[, c("PrimaryId","clientID", "dtefilled",  "IPSDTestResult", "NMHTestResult" , "MDDxTestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "AmtPaidFinal")]
+PBMClaims_MDDxTest <- PBMClaims_MDDxTest[, c("PrimaryId", "clientID", "MemberID", "dtefilled", "IPSDTestResult", "NMHTestResult" , "MDDxTestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "AmtPaidFinal")]
 
 ```
 :::
@@ -630,7 +631,7 @@ GlobalMembers <- GlobalMembers_orig |>
 PBMClaims_CETest1 <- merge(x = PBMClaims_MDDxTest,
               y = GlobalMembers,
               by = "PrimaryId",
-              all.x = TRUE)
+              all = TRUE)
 
 # Continuous Enrollment Test (Pre)
 
@@ -668,7 +669,7 @@ PBMClaims_CETest1$CEDaysDiff_PostTest <- PBMClaims_CETest1$CEDaysDiff_Post > 231
 PBMClaims_CETest1$CETestResult <- ifelse(PBMClaims_CETest1$CEDaysDiff_PostTest & PBMClaims_CETest1$CEDaysDiff_PreTest, TRUE, FALSE)
 
 # Select Choice variables:
-PBMClaims_CE_Test <- PBMClaims_CETest1[, c("PrimaryId", "clientID", "dtefilled", "IPSDTestResult", "NMHTestResult", "MDDxTestResult", "CETestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "CEDaysDiff_Pre", "CEDaysDiff_Post", "AmtPaidFinal")]
+PBMClaims_CE_Test <- PBMClaims_CETest1[, c("PrimaryId", "clientID", "MemberID", "dtefilled", "IPSDTestResult", "NMHTestResult", "MDDxTestResult", "CETestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "CEDaysDiff_Pre", "CEDaysDiff_Post", "AmtPaidFinal")]
 
 # Sort the data
 PBMClaims_CE_Test <- PBMClaims_CE_Test %>%
@@ -695,7 +696,7 @@ PBMClaims_CE_Test$CETestResult <- as.logical(PBMClaims_CE_Test$CETestResult)
 PBMClaims_CE_Test$AMMEligibilityTestResult <- with(PBMClaims_CE_Test, IPSDTestResult & NMHTestResult & MDDxTestResult & CETestResult)
 
 # Select Choice variables:
-AMMEligibilityTest <- PBMClaims_CE_Test[, c("PrimaryId", "clientID", "dtefilled", "AMMEligibilityTestResult", "IPSDTestResult", "NMHTestResult", "MDDxTestResult", "CETestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "CEDaysDiff_Pre", "CEDaysDiff_Post", "AmtPaidFinal")]
+AMMEligibilityTest <- PBMClaims_CE_Test[, c("PrimaryId", "clientID", "MemberID", "dtefilled", "AMMEligibilityTestResult", "IPSDTestResult", "NMHTestResult", "MDDxTestResult", "CETestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "CEDaysDiff_Pre", "CEDaysDiff_Post", "AmtPaidFinal")]
 
 # Sort the data
 AMMEligibilityTest <- AMMEligibilityTest %>%
@@ -710,22 +711,63 @@ AMMEligibilityTest <- AMMEligibilityTest %>%
 
 [^9]: Alliance progress report (Kivela 2023)
 
+::: callout-tip
+### AMM Eligibility, Check!
+
+We have now determined that there is:
+
+1.  A valid Index Prescription Start Date
+2.  A Negative Medication History
+3.  A valid service for Major Depressive Disorder
+4.  A valid period of enrollment
+:::
+
 ## Value-based Purchasing Quality Reports (VBP QR)
 
-The following set of instructions outline how the VBP QR is input from the original report and transformed to actionable data.
+Now that we have a reliable data set for the Real Data (adjudicated claims), we will introduce the Report Data (VBP Quality Roster). We will import and aggregate the Report Data, clean it up, and then compare it with Real Data.
 
-#### Import and combine the data
+::: panel-tabset
 
--   The most recent Value-based Purchasing (VBP) Quality Roster (`r InLineCode$ReportDate`) for each Alliance Provider (AP) was gathered into the folder **(./data/VBPReports/Quality)**.
+#### Description
+The VBP Roster comes to us from Health Choice, but the underlying data is analyzed and produced by a third party vendor, Cotivity.
 
--   The *Roster* page from the excel data model was extracted from each of the individual reports and compiled into a single combined data frame, called ***DataRaw_VBPQR_AllAPsCombined***, that contains the results of all APs.
+The Alliance receives a separate report for each of the Alliance Providers. This procedure outlines how the VBP QR is input from the original report and transformed to actionable data.
 
--   *Note: As of the 2023-04-27 VBPQR, the CBI report is generating a superflous column that has to be removed manually.*
+The resulting table is a complete, cleaned roster of all of the individual member events, for all of the VBP Measures, for all of the Alliance Providers. It is then filtered to assess each measure individually.
 
--   The VBP Report data is cumulative over the VBP measurement year (`r InLineCode$MeasurementYear`) and has a 60 day claims lag, such that the `r InLineCode$ReportDate` VBP QR contains claims adjudicated through `r InLineCode$ClaimsAdjudicatedThrough`.
+***This table is used to construct the VBP Quality Report Dashboard as well as the Alliance Progress Report***
+
+#### Procedure
+
+The most recent Value-based Purchasing (VBP) Quality Roster (`r InLineCode$ReportDate`) for each Alliance Provider (AP) was gathered into the folder **(./data/VBPReports/Quality)**. The *Roster* page from the excel data model was extracted from each of the individual reports and compiled into an aggregated data frame, ***DataRaw_VBPQR_AllAPsCombined***, that contains the results of all APs. 
+
+The VBP Report data is cumulative over the VBP measurement year `r InLineCode$MeasurementYear` and has a 60 day claims lag, such that the `r InLineCode$ReportDate` VBP QR contains claims adjudicated through `r InLineCode$ClaimsAdjudicatedThrough`.
+
+The Table, ***DataRaw_VBPQR_AllAPsCombined,*** is then transformed in order to remove superfluous white space and other text and table titles that were imported by default.
+
+The key transformations are:
+
+-   Remove superfluous rows that contain tables names and descriptions.
+
+-   Promote data from the row with the column names [Row 6] into the column headers.
+
+-   Complete the removal of superfluous rows by filtering the *NA* from the *Gap Status* variable.
+
+-   Create a variable for Provider Shortnames.
+
+-   Store the transformed data as ***VBPQR_AllAPsCombined_Cleaned***
+
+The data in the variable *Health Home TIN & Name* was used to create a new vector of names called *Provider_Shortname*, and then filtered to only include Alliance Providers (CBI, CPIH, EHS, LCBHC, MMHC, PH, SBHS, SHG, TGC).
+
+Finally, the *SubMeasureID* variable was filtered to only include the *AMM2* measure, and a list of the Member IDs was selected. 
+
+A copy of the file ***VBPQR_AllAPsCombined_Cleaned,*** was stored as ***VBPQR_AllAPsCombined_Cleaned2*** for use later.
+
+
+#### Code
 
 ```{r}
-#| label: Load Data
+#| label: Import VBPQR data
 #| eval: false
 #| include: true
 #| echo: true 
@@ -734,23 +776,23 @@ The following set of instructions outline how the VBP QR is input from the origi
 
 # Import the unaltered VBP report, "Detail" sheet, as received from HCA
 # 5/1/23 sheet = "Detail" was change by HCA to sheet = "Roster"
+vbp_cbi   <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-05-31_94-2880847_Community_Bridges_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
+##  vbp_cbi <- vbp_cbi [,-1] 
+##  colnames(vbp_cbi) <- c("BCBSAZ Health Choice" ,"...2", "...3", "...4", "...5", "...6", "...7", "...8", "...9")
+vbp_cpih  <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-05-31_86-0215065_Change_Point_Integrated_Health_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
+vbp_lcbhc <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-05-31_86-0250938_Little_Colorado_Behavioral_Health_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
+vbp_mmhc  <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-05-31_86-0214457_Mohave_Mental_Health_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
+vbp_ph    <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-05-31_86-0206928_Polara_Health_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
+vbp_sbhs  <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-05-31_86-0290033_Southwest_Behavioral_Health_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
+vbp_shg   <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-05-31_86-0207499_Spectrum_Health_Group_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
+vbp_tgc   <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-05-31_86-0223720_The_Guidance_Center_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
 
-vbp_cbi   <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-04-27_94-2880847_Community_Bridges_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster") 
-  vbp_cbi <- vbp_cbi [,-1] 
-  colnames(vbp_cbi) <- c("BCBSAZ Health Choice" ,"...2", "...3", "...4", "...5", "...6", "...7", "...8", "...9")
-vbp_cpih  <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-04-27_86-0215065_Change_Point_Integrated_Health_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
-vbp_lcbhc <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-04-27_86-0250938_Little_Colorado_Behavioral_Health_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
-vbp_mmhc  <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-04-27_86-0214457_Mohave_Mental_Health_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
-vbp_ph    <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-04-27_86-0206928_Polara_Health_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
-vbp_sbhs  <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-04-27_86-0290033_Southwest_Behavioral_Health_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
-vbp_shg   <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-04-27_86-0207499_Spectrum_Health_Group_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
-vbp_tgc   <-  read_xlsx("./data/VBPReports/Quality/vbpbhh_report_2023-04-27_86-0223720_The_Guidance_Center_HCA_BHH_VBP_Quality_Roster.xlsx", sheet = "Roster")
+# Pro Tip
+# if any of the tables pick up rogue columns...
+# vbp_cbi <- vbp_cbi [,-1] 
+# colnames(vbp_cbi) <- c("BCBSAZ Health Choice" ,"...2", "...3", "...4", "...5", "...6", "...7", "...8", "...9")
 
-## if any of the tables pick up rogue columns, use:
-#vbp_cbi <- vbp_cbi [,-1] 
-#colnames(vbp_cbi) <- c("BCBSAZ Health Choice" ,"...2", "...3", "...4", "...5", "...6", "...7", "...8", "...9")
-
-# Bind the Roster sheet from all providers into one table
+# Bind the Details sheet from all providers into one table
 DataRaw_VBPQR_AllAPsCombined <- rbind(
   vbp_cbi,
   vbp_cpih,
@@ -762,41 +804,13 @@ DataRaw_VBPQR_AllAPsCombined <- rbind(
   vbp_tgc
 )
 
+# # write to csv
 # date of file = date of VBP QR report
-# write.csv(DataRaw_VBPQR_AllAPsCombined, "./data/output/VBPMeasurementValidation_AMM/2023-04-27_DataRaw_VBPQR_AllAPsCombined.csv")
+# write.csv(DataRaw_VBPQR_AllAPsCombined, "./data/output/VBPMeasurementValidation/2023-05-31_DataRaw_VBPQR_AllAPsCombined.csv")
 ```
 
-#### Transorm the data for analysis
-
-The Table, *DataRaw_VBPQR_AllAPsCombined,* is then transformed in order to remove superfluous white space and other text and table titles that were imported by default. The key transformations are:
-
--   Remove superfluous rows that contain tables names and descriptions.
--   All "NA" values were removed from the Gap Status variable\
--   Promote data from the row with the column names \[Row 6\] into the column headers.
--   Create a variable "SubMeasureID" from the variable "BCBSAZ Health Choice" for the short form names of HEDIS My2023 measures.
--   The data in the variable "Health Home TIN & Name" was used to create a new vector of names called *Provider_Shortname*
--   Provider_ShortName was then filtered to only include Alliance Providers (CBI, CPIH, EHS, LCBHC, MMHC, Polara, SBHS, SHG, TGC).
--   Store the transformed data as *VBPQR_AllAPsCombined_Cleaned*
-
-The resulting table, *VBPQR_AllAPsCombined_Cleaned* is:
-
--   A complete, cleaned list of:
--   All of the individual member events,
--   for all of the VBP Measures,
--   for all of the Alliance Providers.
-
-***This table is used to construct the VBP Quality Report Dashboard as well as the Alliance Progress Report***
-
-A copy of the file *VBPQR_AllAPsCombined_Cleaned* was stored as *VBPQR_AllAPsCombined_Cleaned2* for use later.
-
--   Finally, the *SubMeasureID* variable was filtered to only include the *AMM* measure, and a list of the Member IDs was selected.
-
-PHEW!
-
-That was a lot. Basically, we just imported disparate VBP Quality Rosters for each Alliance Provider, combined them into one aggregate data set, cleaned it all up, and published it as a new, complete Alliance VBPQR data set. Then we isolated AMM, and extracted only the MemberID list from the data set.
-
 ```{r}
-#| label: CreateVBPQRDataSet
+#| label: Wrangle VBPQR data
 #| eval: false
 #| include: true
 #| echo: true 
@@ -813,43 +827,21 @@ VBPQR_AllAPsCombined_Cleaned <- VBPQR_AllAPsCombined_Cleaned |>
 # Set column names to headers, which get imported on row 1 #5/2/23 - updated from "6" 
 colnames(VBPQR_AllAPsCombined_Cleaned) <- VBPQR_AllAPsCombined_Cleaned [1,] 
 
-# Remove the first row of data that hheaders
+# Remove the first row of data that headers
 VBPQR_AllAPsCombined_Cleaned <- VBPQR_AllAPsCombined_Cleaned[-1,]
 
 # 5/1/23 - Create SubMeasureID
 VBPQR_AllAPsCombined_Cleaned$`SubMeasure ID` <- substr(VBPQR_AllAPsCombined_Cleaned$Measure, 1, 3)
 
-# Create a Provider Shortname
-VBPQR_AllAPsCombined_Cleaned <- VBPQR_AllAPsCombined_Cleaned |> 
-  mutate(Provider_Shortname = ifelse(`Health Home TIN & Name` == "94-2880847 - COMMUNITY BRIDGES", "CBI",
-            ifelse(`Health Home TIN & Name` == "86-0215065 - CHANGE POINT INTEGRATED HEALTH", "CPIH", 
-                   ifelse(`Health Home TIN & Name` == "86-0250938 - LITTLE COLORADO BEHAVIORAL HEALTH", "LCBHC", 
-                          ifelse(`Health Home TIN & Name` == "86-0214457 - MOHAVE MENTAL HEALTH", "MMHC", 
-                                 ifelse(`Health Home TIN & Name` == "86-0206928 - POLARA HEALTH", "PH", 
-                                        ifelse(`Health Home TIN & Name` == "86-0290033 - SOUTHWEST BEHAVIORAL HEALTH", "SBHS", 
-                                               ifelse(`Health Home TIN & Name` == "86-0207499 - SPECTRUM HEALTH GROUP", "SHG",
-                                                      ifelse(`Health Home TIN & Name` == "86-0223720 - THE GUIDANCE CENTER", "TGC", NA
-        ))))))))) |> 
-  drop_na(Provider_Shortname)
+```
 
-VBPQR_AllAPsCombined_Cleaned2 <- VBPQR_AllAPsCombined_Cleaned
-
-# date of file = date of VBP QR report
-
-# write.csv(VBPQR_AllAPsCombined_Cleaned, "./data/output/VBPMeasurementValidation_AMM/VBPQR_AllAPsCombined_Cleaned_complete_2023-04-27.csv")
-
-# Isolate SubMeasure ID AMM for the validation
-VBPQR_AllAPsCombined_AMM <- VBPQR_AllAPsCombined_Cleaned |>   filter(`SubMeasure ID` == "AMM")
-
-# write.csv(VBPQR_AllAPsCombined_AMM, "./data/output/VBPMeasurementValidation/VBPQR_AllAPsCombined_AMM.csv")
-
-
-# Isolate member ID for the validation
-VBPQR_AllAPsCombined_AMMMemberID <- VBPQR_AllAPsCombined_AMM |> 
-  select(`Member ID`)
-
-# write.csv(VBPQR_AllAPsCombined_AMM, "./data/output/VBPMeasurementValidation_AMM/VBPQR_AllAPsCombined_AMMMemberID.csv")
-
+```{r}
+#| label: Wrangle VBPQR data 2
+#| eval: false
+#| include: true
+#| echo: true 
+#| warning: false
+#| error: false
 
 # create a duplicate at this phase to be used in later evaluation
 VBPQR_AllAPsCombined_Cleaned2 <- VBPQR_AllAPsCombined_Cleaned |> 
@@ -863,10 +855,11 @@ VBPQR_AllAPsCombined_Cleaned <- VBPQR_AllAPsCombined_Cleaned |>
   select(`Member ID`)
 
 # write.csv(VBPQR_AllAPsCombined_Cleaned, "./data/output/VBPMeasurementValidation/VBP_Validation.csv")
-
 ```
+:::
 
-## AMM Validation Data Modeling
+
+# AMM Validation Data Modeling
 
 The terms for the Validation Model for AMM are *Conceptual* and *Logical*. This model will help to define the systems surrounding measurement of AMM. This model also outlines a set of logical rules and structures of data to be used across agencies. 
 
@@ -877,26 +870,25 @@ The validation of VBP cases against adjudicated claims will tell us if the repor
 
 ::: panel-tabset
 
-### Test Design
+## Test Design
 
 Image of test design here
+![The Alliance Value Based Purchasing Validation Model for AMM](./images/puppy-placeholder.jpg)
 
-### Procedure
+## Procedure
 
-#### VBP Quality Roster Reports
+### Report Data: VBP Quality Roster Reports
 
 ***The VBPQR_AllAPsCombined_Cleaned*** data frame was loaded to the test model. The data was summarized, per member, by counting the instances of eligibility per member. This creates a vector of unduplicated Member IDs called ***VBP_Unduplicated***.
 
-#### Adjudicated Claims
+### Real Data: Adjudicated Claims
 
 The ***IPClaims_validation*** data frame was loaded to the test model. The claims data was then summarized by counting the instances of HEDIS My2022 eligible claims per member. This creates a vector of unduplicated Member IDs called ***Claims_Unduplicated***.
 
-### Code
-
-#### VBP Quality Roster Reports
+## Code
 
 ```{r}
-#| label: VBP Unduplicated
+#| label: Modeling VBP Unduplicated
 #| eval: false
 #| include: true
 #| echo: true 
@@ -911,29 +903,22 @@ VBP_Unduplicated <- VBPQR_AllAPsCombined_Cleaned |>
 # write.csv(VBP_Unduplicated, "./data/output/VBPMeasurementValidation/VBP_Unduplicated.csv")
 ```
 
-#### Adjudicated Claims
-
 ```{r}
-#| label: Adjudicated Claims Unduplicated
+#| label: Modeling Claims Unduplicated
 #| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
 #| error: false
 
-AMMClaims_validation <- AMMEligibilityTest |> 
-  select(MemberID,
-         svccode)
-
-# write.csv(IPClaims_validation, "./data/output/VBPMeasurementValidation/IPClaims_Validation.csv")
-
-
-IPClaims_Unduplicated <- IPClaims_validation |> 
+AMMClaims_Unduplicated <- AMMEligibilityTest |> 
   filter(MemberID != "NULL") |> 
   group_by(MemberID) |> 
   count()
 
 # write.csv(IPClaims_Unduplicated, "./data/output/VBPMeasurementValidation/IPClaims_Unduplicated.csv")
+
+
 ```
 
 :::
