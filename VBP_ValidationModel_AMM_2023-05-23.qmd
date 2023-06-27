@@ -1,5 +1,5 @@
 ---
-title: "Value Based Purchasing Validation Model"
+title: "NCQA My HEDIS 2023 Validation Model"
 subtitle: "Antidepresant Medication Management"
 author: 
   name: "John Ryan Kivela, MA"
@@ -15,29 +15,6 @@ format:
     code-fold: true
     footnotes-hover: true
 ---
-
-# Welcome *(Bien Venido)*
-
-Hello,
-
-This project is a model that compares Report Data with Real Data by comparing the Health Choice Value Based Purchasing Quality Roster (VBPQR)[^1] for Antidepressant Medication Management (AMM) with Health Choice adjudicated claims. This project is similar in many ways to the VBP Validation Model for Follow Up after Hospitalization (FUH)[^2].
-
-[^1]: Health Choice Arizona. (2023). *Value Based Purchasing Quality Roster*
-
-[^2]: Kivela, J.R. (2023). Value Based Purchasing Data Validation Model. *The Northern Arizona Regional Behavioral Health Alliance*.
-
-The AMM guidelines are far more nuanced[^3]. Nonetheless we have endeavored to define the eligible population and compare it against the VBP report.
-
-[^3]: https://www.ncqa.org/hedis/
-
-The results were great, *(Amazing result to come)*.
-
-We hope you enjoy reading this data story. We are always looking for collaborators to work with, so please reach out and share your ideas.
-
-Sincerely,
-
-Ryan
-
 ```{r}
 #| label: Setup
 #| eval: true
@@ -53,6 +30,7 @@ library(kableExtra)
 library(gt)
 library(scales)
 library(utils)
+library(lubridate)
 
 # Create table for inline code
 InLineCode <- data.frame(
@@ -70,34 +48,109 @@ InLineCode <- data.frame(
 
 ```
 
+
+```{r}
+#| label: Demo Data
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+PBMClaims <- read.csv("./data/DataRaw_PBMClaims_2023-05-31.csv")
+
+PBMClaims <- read.csv("./data/output/PBMClaims.csv")
+
+PBMClaims_NMHTest <- ("./data/output/PBMClaims_NMHTest_copy.csv")
+
+ValueSetListMy2023 <- read.csv("./data/ValueSetListMy2023.csv")
+
+MDDxClaims <- read.csv("./data/MDDxClaims_20230602.csv")
+
+# PBMClaims_MDDxTest <- read.csv("./data/output/PBMClaims_MDDxTest.csv")
+
+GlobalMembers_orig <- read_xlsx("./data/data_original_glblmbrs_2023-05-01_globalMembersRoster.xlsx", sheet = "Sheet1")
+
+PBMClaims_CE_Test <- read.csv("./data/output/PBMClaims_CE_Test.csv")
+
+AMMEligibilityTest <- read.csv("./data/output/AMMEligibilityTest.csv")
+
+DataRaw_VBPQR_AllAPsCombined <- read.csv("./data/output/2023-05-31_DataRaw_VBPQR_AllAPsCombined.csv")
+
+VBPQR_AllAPsCombined_Cleaned2 <- read.csv("./data/output/VBPQR_AllAPsCombined_Cleaned2.csv")
+
+VBPQR_AllAPsCombined_Cleaned <- read.csv("./data/output/VBP_Validation.csv")
+
+VBP_Unduplicated <- read.csv("./data/output/VBP_Unduplicated.csv")
+
+AMMClaims_Unduplicated <- ("./data/output/AMMClaims_Unduplicated.csv")
+
+Validation_Matrix <- read.csv("./data/output/ValidationMatrix.csv")
+
+Compliance <- read.csv("./data/output/Compliance.csv")
+
+Comp_ChiSq <- read.csv("./data/output/Comp_ChiSq.csv")
+
+MemberFollowUpList <- read.csv("./data/output/AMM_MemberFollowUpList.csv")
+```
+
+
+# Welcome *(Bien Venido)*
+
+Hello,
+
+This project is a model that compares Report Data with Real Data by comparing the Health Choice Value Based Purchasing Quality Roster (VBPQR)[^1] for Antidepressant Medication Management (AMM) with Health Choice adjudicated claims. This project is similar in many ways to the VBP Validation Model for Follow Up after Hospitalization (FUH)[^2].
+
+[^1]: Health Choice Arizona. (2023). *Value Based Purchasing Quality Roster*
+
+[^2]: Kivela, J.R. (2023). Value Based Purchasing Data Validation Model. *The Northern Arizona Regional Behavioral Health Alliance*.
+
+The guidelines for antidepressant medication are far more nuanced[^3]. Nonetheless we have endeavored to define the eligible population using adjudicated claims, measuring our Real Data against the VBP Quality Report Data.
+
+[^3]: https://www.ncqa.org/hedis/
+
+The results were surprising! While our analysis of the FUH7 measure have repeatedly demonstrated an underrating of Alliance performance, our first look at AMM seems to show an *overrating*, not that there's anything wrong with that.
+
+We hope you enjoy reading this data story. We are always looking for new collaborators, so please reach out and share your ideas.
+
+Sincerely,
+
+Ryan
+
+Image of overall here ![The Alliance Value Based Purchasing Validation Model for AMM](./images/puppy-placeholder.jpg)
+
+
+
 ## The thing about measuring VBP
 
 So, there we were in the first months of the Alliance ACO business, and EVERY provider was concerned that the Value Based Purchasing Quality Roster was inaccurate. Our providers were concerned that their performance scores were underrated, not giving them the credit they deserved.
 
-The Alliance wants its providers to be their best selves and be recognized. Lack of confidence in the scoring mechanism crowds out enthusiasm and damages commitment to improvement.
+The Alliance wants its providers to be their best selves and to be recognized. Lack of confidence in the scoring mechanism crowds out enthusiasm and damages commitment to improvement.
 
-So, in January 2023 we completed a project that developed a validation model for the Follow Up after Hospitalization (FUH) HEDIS measure. This model was built based on the prior measurement year, and former vendor, Arcadia.
+So, in January 2023 we developed a validation model for the Follow Up after Hospitalization (FUH) HEDIS measure.
 
 ::: callout-tip
-### The VBP Validation Model FUH7 (2023), key takeaways:
+### The VBP Validation Model FUH7 (2023): Key Takeaways:
 
 -   Created a validated data model that can be used to identify eligible member events for FUH7
--   The core of the model can be used to develop future models for other HEDIS/NCQA measures.
+-   The core logic can be used to develop models for other HEDIS/NCQA measures.
 -   The research affirmed that the providers were correct. They were indeed underrated for the 2022 measurement year and deserved a higher score by about 4 percentage points.
 :::
 
 ### So what's next?
 
-That brings us to the new measurement year, January 2023 to December 2023. There is also a new vendor, Cotivity. In this project the VBP Validation Model is going to be applied to the Antidepressant Medication Management (AMM) HEDIS My2023[^4] performance measure. This is the first time that anyone in the HCA network has done this assessment and we hope the results are illuminating.
+That brings us to the new measurement year, January 2023 to December 2023. In this project the VBP Validation Model is going to be applied to the Antidepressant Medication Management (AMM) HEDIS My2023[^4] performance measure.
 
 [^4]: https://www.ncqa.org/hedis/
+
+This is the first time that anyone in the HCA network has done this assessment and we hope the results are illuminating.
 
 This model compares **Report Data** from the VBP Quality Roster with **Real Data** from adjudicated claims.
 
 The model will answer the following questions:
 
--   How do the results of the Value Based Purchasing Quality Roster (VBPQR) compare against actual adjudicated claims?
--   Are there mistakes in the report data that have a significant impact on the performance scores of Alliance Providers?
+-   Do the results of the Value Based Purchasing Quality Roster (VBPQR) accurately reflect actual adjudicated claims?
+-   Are the performance scores of Alliance Providers accurate and reliable?
 
 The business objectives are twofold:
 
@@ -106,27 +159,31 @@ The business objectives are twofold:
 
 ## Why invest in this research?
 
-Inaccurate measurement of VBP performance leads to an invalid assessment of the Alliance Providers' delivery of services to their patients. In previous years, Alliance providers were underrated on Follow Up after Hospitalization (FUH7) by at least 4 percentage points.
+Inaccurate measurement of VBP performance leads to an invalid assessment of the Alliance Providers' delivery of services to their patients.
+
+In previous years, Alliance providers were underrated on Follow Up after Hospitalization (FUH7) by at least 4 percentage points[^5].
+
+[^5]: Kivela, J.R. (2023). Value Based Purchasing Data Validation Model. *The Northern Arizona Regional Behavioral Health Alliance*.
 
 ![Alliance Provider performance scores were underated (red blocks) by at least 4 percentage points in 2022](./images/Fig_sup_Compliance.png)
 
-Underrating performance frustrates the leadership and dampens the spirits of the clinical teams as they do this very difficult work.
+Underrating provider performance frustrates leadership and dampens the spirits of the clinical teams as they do this very difficult work.
 
 Accurate measurement offers a better opportunity to identify patients in need, maximize financial incentives associated with performance, and support provider morale.
 
 # Setting up the experiment
 
-This manuscript is written using Brisk-DM. Brisk-DM is a structure for doing data science that is based on CRISP-DM[^5], but tailored for executives and business leads. Brisk-DM uses an approachable communication style that is more understandable to professionals in the workplace.
+This manuscript is written using Brisk-DM. Brisk-DM is a structure for doing data science that is based on CRISP-DM[^6], but tailored for executives and business leads. Brisk-DM uses an approachable communication style that is more understandable to professionals in the workplace.
 
-[^5]: CRISP-DM help overview. (August 17, 2021). https://www.ibm.com/docs/en/spss-modeler/saas?topic=dm-crisp-help-overview.
+[^6]: CRISP-DM help overview. (August 17, 2021). https://www.ibm.com/docs/en/spss-modeler/saas?topic=dm-crisp-help-overview.
 
 ## The current state of things
 
-At the time of this writing, The Alliance has received the first 3 months of VBP Quality Rosters the 2023 measurement year. Our application of the VBP Validation Model for FUH7 in June 2023 revealed a similar pattern to 2022 where we found that FUH was underrated[^6].
+At the time of this writing, The Alliance has received the first 3 months of VBP Quality Rosters the 2023 measurement year. Our application of the VBP Validation Model for FUH7 in June 2023 revealed a similar pattern to 2022 where we found that performance scores for FUH were underrated[^7].
 
-[^6]: Kivela, J.R. (June 13, 2023). Value Based Purchasing Data Validation Model. *The Northern Arizona Regional Behavioral Health Alliance*. ("./documents/report_updated_2023-03-29_VBPMeasurementValidation.html")
+[^7]: HEDIS Criteria reference
 
-These results for FUH are under further investigation while we develop this model for AMM.
+The results for FUH are under further investigation while we develop this model for AMM.
 
 ## Hablemos de dato (Let's talk about the data)
 
@@ -139,9 +196,9 @@ This data model is simple in concept, but complex in design. The model compares 
 +:=================================================================================================================================+===+:==================================================================================+
 | -   Health Choice receives this data from third party vendor, Cotivity                                                           |   | -   A data set of adjudicated claims queried directly from the HCA data warehouse |
 |                                                                                                                                  |   |                                                                                   |
-| -   An excel workbook containing a roster of the members deemed eligible for VBP HEDIS NCQA measures and their compliance status |   | -   Records are gathered from the Claims and PBM databases                        |
+| -   An excel workbook containing a roster of the members deemed eligible for VBP HEDIS NCQA measures including compliance status |   | -   Records are gathered from the Claims and PBM databases                        |
 |                                                                                                                                  |   |                                                                                   |
-| -   The Alliance receives individual rosters for each Alliance Provider                                                          |   | -   Claims are extracted for all eligible service codes for the measurement year  |
+| -   The Alliance receives individual rosters for each Alliance Provider                                                          |   | -   Claims are extracted for all eligible service codes for the measurement year (8 individual files)  |
 +----------------------------------------------------------------------------------------------------------------------------------+---+-----------------------------------------------------------------------------------+
 
 ### Is the data we use reliable?
@@ -151,7 +208,7 @@ This data model is simple in concept, but complex in design. The model compares 
 +:========================================================================================================================+===+:=====================================================================================================================================+
 | -   The outstanding question with the VBPQR is if the underlying data from the third party vendor Cotivity is accurate. |   | -   Claims data is of the highest quality as it is compiled and reviewed extensively by Health Choice for its own business purposes. |
 |                                                                                                                         |   |                                                                                                                                      |
-| -   The report quality itslef is very high as it is compiled by Health Choice Business Intelligence staff.              |   | -   The quality of this data is also reviewed by state and federal regulation entities, like AHCCCS                                  |
+| -   The report quality itself is very high as it is compiled by Health Choice Business Intelligence staff.              |   | -   The quality of this data is also reviewed by state and federal regulation entities, like AHCCCS                                  |
 |                                                                                                                         |   |                                                                                                                                      |
 | -   The underlying data is what is under investigation                                                                  |   |                                                                                                                                      |
 +-------------------------------------------------------------------------------------------------------------------------+---+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -164,22 +221,23 @@ We now embark upon building a data set of eligible claims for the AMM measure. T
 ### An eligible member event is defined as follows:
 
 -   The individual is an adult, aged 18 or older, **and**
--   A prescription is filled for an eligible antidepressant medication within the "Intake Period" (***Index Prescription Start Date (IPSD)***), **and**
+-   A prescription was filled for an eligible antidepressant medication within the "Intake Period" (***Index Prescription Start Date (IPSD)***), **and**
 -   No other prescriptions were filled for eligible antidepressant medications within 105 days earlier than the IPSD (***Test for Negative Medication History (NMH)***), **and**
--   The individual had a service for one of the eligible Major Depressive Disorders (***Test for Major Depressive Disorder (MDDx)***) within 60 days (-60 days before, or +60 days after), **and**
--   The individual had continuous enrollment (***Test for Continuous Enrollment (CE)***)for
+-   The individual had a service for at least one of the eligible Major Depressive Disorders (***Test for Major Depressive Disorder (MDDx)***) within 60 days (-60 days before, or +60 days after), **and**
+-   The individual had continuous enrollment (***Test for Continuous Enrollment (CE)***) for
     -   105 days before the IPSD, **and**
     -   231 days after the IPSD
 :::
 
 Check out the visualization of the AMM Eligibility Model below. There are many components of this model with overlapping time frames. We will describe these steps in further detail in the next section.
 
-![AMM Eligibility Model (Kivela, 2023)](./data/DataModel/Graphic_AMMEligibilityModel2023.png)
+![AMM Eligibility Model (Kivela, 2023)](./data/DataModel/Graphic_AMMEligibilityModel2023.png){width=70%}
 
-Refer to the visualization above, or think of the criteria as a tumbling bike lock.
+You may also think of the criteria as a tumbling bike lock. All four criteria must line up, *in the right order*, for the lock to open. Once unlocked, the resulting data set es El Dato Verdad, the **Real Data**.
+
 
 +------------------------------------------+----------------------------------------------------------------------------------------------------------------:+
-| There are 4 primary criteria:            | ![](./images/bikelock.jpg){fig-alt="A tumbling bike lock representing the AMM Model" align="right" width="75%"} |
+| **AMM Eligibility: Primary criteria:            | ![](./images/bikelock.jpg){fig-alt="A tumbling bike lock representing the AMM Model" align="right" width="75%"} |
 |                                          |                                                                                                                 |
 | -   Index Prescription Start Date (IPSD) |                                                                                                                 |
 | -   Negative Medication History (NMH)    |                                                                                                                 |
@@ -189,9 +247,9 @@ Refer to the visualization above, or think of the criteria as a tumbling bike lo
 
 All four criteria must line up, *in the right order*, for the lock to open. Once unlocked, the resulting data set es El Dato Verdad, the **Real Data**.
 
-### The Index Prescription Start Date 
+### The Index Prescription Start Date
 
-The first criteria that must be met is the Index Prescription Start Date (IPSD). This is the date that an individual filled a prescription for one of the HEDIS My 2023 eligible medications. 
+The first criteria that must be met is the Index Prescription Start Date (IPSD). This is the date that an individual filled a prescription for one of the HEDIS My 2023 eligible antidepressant medications.
 
 ::: panel-tabset
 #### Description
@@ -274,7 +332,7 @@ WHERE
 
 ```{r}
 #| label: IPSDTest
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| code-fold: show
@@ -316,7 +374,7 @@ PBMClaims_NMHTest$IPSDTestResult <- ifelse(
 
 **The Test for Negative Medication History** determines if an individual is a new recipient of an antidepressant medication. An individual passes this test if they have **not** had a prescription for an antidepressant medication within 105 days **prior to** the IPSD.
 
-**Be patient.** This part of the program takes about 20 minutes to run. If you think about what it is doing, it is comparing every row of claims (\~147,000 rows) against the IPSD Intake Period range, and for all of the positive returns, comparing each one to each of the the original 147,000 rows for the NMH test.
+**Be patient.** If you are replicating this project, this part of the program takes about 20 minutes to run. If you think about what it is doing, it is comparing every row of claims (\~147,000 rows) against the IPSD Intake Period range, and for all of the positive returns, comparing each one to each of the the original 147,000 rows for the NMH test.
 
 Think about trying to guess the first 2 numbers on the bike lock, multiplied by 147,000. Anyway, it's a lot. Go grab some coffee.
 
@@ -351,7 +409,7 @@ This is the code my friends
 
 ```{r}
 #| label: NMHTest
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| code-fold: show
@@ -384,7 +442,7 @@ for (i in 1:nrow(PBMClaims_NMHTest)) {
     PBMClaims_NMHTest$NMHTestResult[i] <- "FALSE"
   }
 }
-# write.csv(PBMClaims_NMHTest, "./data/output/PBMClaims_NMHTest_copy.csv")
+# write.csv(PBMClaims_NMHTest, "./data/output/PBMClaims_NMHTest.csv")
 
 ```
 :::
@@ -403,14 +461,16 @@ Next up is to determine if there was an eligible diagnosis
 
 ### Test for Major Depressive Disorder
 
-The next stop on the road is to confirm that the individual had a service for one of the eligible Major Depressive Disorders (MDDx) within 60 days, (-60 days before, or +60 days after).
+The next stop on the road is to confirm that the individual had a service for at least one of the eligible Major Depressive Disorders (MDDx) within 60 days (-60 days before, or +60 days after).
 
 ::: panel-tabset
 #### Description
 
-A diagnosis of Major Depressive Disorder is identified by cross referencing members with eligible IPSD and NMH, which is determined using PBM records, against claims records from the Claims database. Individual identifying data is used to join PBM records with claims records. 
+A diagnosis of Major Depressive Disorder is identified by cross referencing members with eligible IPSD and NMH (using PBM records), against behavioral health claims records for MDD. Individual identifying data is used to join PBM records with claims records, and make the comparison.
 
 #### Procedure
+
+**Needs Work**
 
 So we have to use BHClaims.
 
@@ -428,7 +488,7 @@ Pull the list of MDDx diagnosis codes
 
 ```{r}
 #| label: MajDepressiveDxTest
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -534,7 +594,7 @@ AND CASE WHEN v.Code IS NOT NULL THEN 'True' ELSE 'False' END = 'True';
 
 ```{r}
 #| label: MDDxClaimsImport
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -548,7 +608,7 @@ MDDxClaims <- read_csv("./data/MDDxClaims_20230602.csv")
 
 ```{r}
 #| label: MDDxClaims1
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -569,13 +629,13 @@ PBMClaims_MDDxTest$MDDxTestResult <- ifelse(abs(as.numeric(as.Date(PBMClaims_MDD
 # Select the columns of interest, change name to _MDDXTest
 PBMClaims_MDDxTest <- PBMClaims_MDDxTest[, c("PrimaryId", "clientID", "MemberID", "dtefilled", "IPSDTestResult", "NMHTestResult" , "MDDxTestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "AmtPaidFinal")]
 
+#write.csv(PBMClaims_MDDxTest, "./data/output/PBMClaims_MDDxTest.csv")
+
 ```
 :::
 
 ::: callout-tip
 ### Woo hoo! It worked!
-
-
 
 We have now determined that there is:
 
@@ -595,13 +655,13 @@ Now that we have confirmed IPSD, NMH, and MDDx, we will compare the member infor
 
 An event is eligible if the individual had continuous enrollment for -105 days before the IPSD, **AND** +231 days after the IPSD.
 
-The result is a big data solution, error, etc. 
+The result is a big data solution, error, etc.
 
 #### Procedure
 
 Ok, so what do we do here???
 
-Take our main table, now called PBMClaims_MDDxTest. Compare the PrimaryId Associated with the event against our member enrollment roster developed in the Alliance Progress Report [^9]. This is the full global members roster because we are not filtering for active membership only. Individuals who are currently disenrolled are included as well.
+Take our main table, now called PBMClaims_MDDxTest. Compare the PrimaryId Associated with the event against our member enrollment roster developed in the Alliance Progress Report [^8]. This is the full global members roster because we are not filtering for active membership only. Individuals who are currently disenrolled are included as well.
 
 First, confirm if the eligible event matches anyone on the enrollment roster.
 
@@ -613,7 +673,7 @@ Here's the code
 
 ```{r}
 #| label: Continuous Enrollment
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -676,11 +736,13 @@ PBMClaims_CE_Test <- PBMClaims_CETest1[, c("PrimaryId", "clientID", "MemberID", 
 PBMClaims_CE_Test <- PBMClaims_CE_Test %>%
   arrange(desc(PrimaryId), desc(dtefilled), IPSDTestResult)
 
+#write.csv(PBMClaims_CE_Test, "./data/output/PBMClaims_CE_Test.csv")
+
 ```
 
 ```{r}
 #| label: AMM Eligibility Test
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -710,7 +772,7 @@ AMMEligibilityTest <- AMMEligibilityTest %>%
 ```
 :::
 
-[^9]: Alliance progress report (Kivela 2023)
+[^8]: Alliance progress report (Kivela 2023)
 
 ::: callout-tip
 ### AMM Eligibility, Check!
@@ -728,8 +790,8 @@ We have now determined that there is:
 Now that we have a reliable data set for the Real Data (adjudicated claims), we will introduce the Report Data (VBP Quality Roster). We will import and aggregate the Report Data, clean it up, and then compare it with Real Data.
 
 ::: panel-tabset
-
 #### Description
+
 The VBP Roster comes to us from Health Choice, but the underlying data is analyzed and produced by a third party vendor, Cotivity.
 
 The Alliance receives a separate report for each of the Alliance Providers. This procedure outlines how the VBP QR is input from the original report and transformed to actionable data.
@@ -740,7 +802,7 @@ The resulting table is a complete, cleaned roster of all of the individual membe
 
 #### Procedure
 
-The most recent Value-based Purchasing (VBP) Quality Roster (`r InLineCode$ReportDate`) for each Alliance Provider (AP) was gathered into the folder **(./data/VBPReports/Quality)**. The *Roster* page from the excel data model was extracted from each of the individual reports and compiled into an aggregated data frame, ***DataRaw_VBPQR_AllAPsCombined***, that contains the results of all APs. 
+The most recent Value-based Purchasing (VBP) Quality Roster (`r InLineCode$ReportDate`) for each Alliance Provider (AP) was gathered into the folder **(./data/VBPReports/Quality)**. The *Roster* page from the excel data model was extracted from each of the individual reports and compiled into an aggregated data frame, ***DataRaw_VBPQR_AllAPsCombined***, that contains the results of all APs.
 
 The VBP Report data is cumulative over the VBP measurement year `r InLineCode$MeasurementYear` and has a 60 day claims lag, such that the `r InLineCode$ReportDate` VBP QR contains claims adjudicated through `r InLineCode$ClaimsAdjudicatedThrough`.
 
@@ -750,7 +812,7 @@ The key transformations are:
 
 -   Remove superfluous rows that contain tables names and descriptions.
 
--   Promote data from the row with the column names [Row 6] into the column headers.
+-   Promote data from the row with the column names \[Row 6\] into the column headers.
 
 -   Complete the removal of superfluous rows by filtering the *NA* from the *Gap Status* variable.
 
@@ -760,16 +822,15 @@ The key transformations are:
 
 The data in the variable *Health Home TIN & Name* was used to create a new vector of names called *Provider_Shortname*, and then filtered to only include Alliance Providers (CBI, CPIH, EHS, LCBHC, MMHC, PH, SBHS, SHG, TGC).
 
-Finally, the *SubMeasureID* variable was filtered to only include the *AMM2* measure, and a list of the Member IDs was selected. 
+Finally, the *SubMeasureID* variable was filtered to only include the *AMM2* measure, and a list of the Member IDs was selected.
 
 A copy of the file ***VBPQR_AllAPsCombined_Cleaned,*** was stored as ***VBPQR_AllAPsCombined_Cleaned2*** for use later.
-
 
 #### Code
 
 ```{r}
 #| label: Import VBPQR data
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -807,12 +868,12 @@ DataRaw_VBPQR_AllAPsCombined <- rbind(
 
 # # write to csv
 # date of file = date of VBP QR report
-# write.csv(DataRaw_VBPQR_AllAPsCombined, "./data/output/VBPMeasurementValidation/2023-05-31_DataRaw_VBPQR_AllAPsCombined.csv")
+# write.csv(DataRaw_VBPQR_AllAPsCombined, "./data/output/2023-05-31_DataRaw_VBPQR_AllAPsCombined.csv")
 ```
 
 ```{r}
 #| label: Wrangle VBPQR data
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -834,11 +895,13 @@ VBPQR_AllAPsCombined_Cleaned <- VBPQR_AllAPsCombined_Cleaned[-1,]
 # 5/1/23 - Create SubMeasureID
 VBPQR_AllAPsCombined_Cleaned$`SubMeasure ID` <- substr(VBPQR_AllAPsCombined_Cleaned$Measure, 1, 3)
 
+# write.csv(VBPQR_AllAPsCombined_Cleaned, "./data/output/VBPQualityRoster.csv")
+
 ```
 
 ```{r}
 #| label: Wrangle VBPQR data 2
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -848,34 +911,31 @@ VBPQR_AllAPsCombined_Cleaned$`SubMeasure ID` <- substr(VBPQR_AllAPsCombined_Clea
 VBPQR_AllAPsCombined_Cleaned2 <- VBPQR_AllAPsCombined_Cleaned |> 
   filter(`SubMeasure ID` == "AMM")
 
-# write.csv(VBPQR_AllAPsCombined_Cleaned2, "./data/output/VBPMeasurementValidation/VBPQR_AllAPsCombined_Cleaned2.csv")
+# write.csv(VBPQR_AllAPsCombined_Cleaned2, "./data/output/VBPQR_AllAPsCombined_Cleaned2.csv")
 
 # Isolate member ID for the validation
 VBPQR_AllAPsCombined_Cleaned <- VBPQR_AllAPsCombined_Cleaned |> 
   filter(`SubMeasure ID` == "AMM") |> 
   select(`Member ID`)
 
-# write.csv(VBPQR_AllAPsCombined_Cleaned, "./data/output/VBPMeasurementValidation/VBP_Validation.csv")
+# write.csv(VBPQR_AllAPsCombined_Cleaned, "./data/output/VBP_Validation.csv")
 ```
 :::
 
-
 # AMM Validation Data Modeling
 
-The terms for the Validation Model for AMM are *Conceptual* and *Logical*. This model will help to define the systems surrounding measurement of AMM. This model also outlines a set of logical rules and structures of data to be used across agencies and measures. 
+The terms for the Validation Model for AMM are *Conceptual* and *Logical*. This model will help to define the systems surrounding measurement of AMM. This model also outlines a set of logical rules and structures of data to be used across agencies and measures.
 
 ::: panel-tabset
-
 ## Description of Test Design
 
-This model extracts data from multiple VBP Quality Reports and aggregates it them into a single data set. It also collects adjudicated claims data from the Health Choice data warehouse. 
+This model extracts data from multiple VBP Quality Reports and aggregates it them into a single data set. It also collects adjudicated claims data from the Health Choice data warehouse.
 
-The 2 data sets are then joined to create the Validation Matrix, comparing VBP cases against adjudicated claims.  
+The 2 data sets are then joined to create the Validation Matrix, comparing VBP cases against adjudicated claims.
 
 ***The Validation Matrix is the table that will be used for evaluation! Phew! :)***
 
-Image of test design here
-![The Alliance Value Based Purchasing Validation Model for AMM](./images/puppy-placeholder.jpg)
+Image of test design here ![The Alliance Value Based Purchasing Validation Model for AMM](./images/puppy-placeholder.jpg)
 
 ## Procedure
 
@@ -893,9 +953,8 @@ The ***VBP_Unduplicated*** and the ***AMMClaims_Unduplicated*** were full outer 
 
 -   This table contains all of the unduplicated VBPQR MemberIDs, AND all of the unduplicated Claims MemberIDs.
 
-The data is assessed for cases where a VBP MemberID is validated against a Claims MemberID.
--   A positive result is called "Match", and a negative result is called "NoMatch"
-  
+The data is assessed for cases where a VBP MemberID is validated against a Claims MemberID. - A positive result is called "Match", and a negative result is called "NoMatch"
+
 ### The Validation Matrix
 
 -   The ***Validation_Matrix*** was created by reducing the VBP Quality Roster and adjudicated claims to unduplicated observations of each *MemberID*, and then matching the 2 data sets by *MemberID*.
@@ -906,7 +965,7 @@ The data is assessed for cases where a VBP MemberID is validated against a Claim
 
 ```{r}
 #| label: Modeling VBP Unduplicated
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -917,12 +976,12 @@ VBP_Unduplicated <- VBPQR_AllAPsCombined_Cleaned |>
   rename("MemberID" = `Member ID`) |> 
   count()
 
-# write.csv(VBP_Unduplicated, "./data/output/VBPMeasurementValidation/VBP_Unduplicated.csv")
+# write.csv(VBP_Unduplicated, "./data/output/VBP_Unduplicated.csv")
 ```
 
 ```{r}
 #| label: Modeling Claims Unduplicated
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -933,14 +992,14 @@ AMMClaims_Unduplicated <- AMMEligibilityTest |>
   group_by(MemberID) |> 
   count()
 
-# write.csv(IPClaims_Unduplicated, "./data/output/VBPMeasurementValidation/IPClaims_Unduplicated.csv")
+# write.csv(AMMClaims_Unduplicated, "./data/output/AMMClaims_Unduplicated.csv")
 
 
 ```
 
 ```{r}
 #| label: Modeling Validation Matrix
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -955,7 +1014,7 @@ Validation_Matrix <-
          "claims" = n.y) |> 
   mutate(Match = if_else((is.na(VBP) | is.na(claims)), "NoMatch", "Match"))
 
-# write.csv(Validation_Matrix, "./data/output/VBPMeasurementValidation/ValidationMatrix.csv")
+# write.csv(Validation_Matrix, "./data/output/ValidationMatrix.csv")
 ```
 
 ## Summary
@@ -968,11 +1027,9 @@ Validation_Matrix <-
 
 ***Claims***
 
--   
-** Needs rewording for PBM claims and MDDx Claims with inlione code
+-   \*\* Needs rewording for PBM claims and MDDx Claims with inlione code
 
-**
-
+\*\*
 :::
 
 # Results
@@ -989,7 +1046,7 @@ Overall Compliance of All Reported VBP QR Events (Comp_ChiSq):
 
 ```{r}
 #| label: Compliance Table
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -1008,7 +1065,7 @@ Compliance <-
 
 colnames(Compliance)[6] <- "Gap_Status"
 #####
-# write.csv(Compliance, "./data/output/VBPMeasurementValidation/Compliance.csv")
+# write.csv(Compliance, "./data/output/Compliance.csv")
 
 # write.csv(Compliance, "C:/Users/RyanK/OneDrive - The NARBHA Institute/Documents - Data Force/Projects/AllianceIntranetSupport/data/Compliance.csv")
 ```
@@ -1053,14 +1110,14 @@ Comp_ChiSq <- Compliance |>
   # mutate(`0` = as.double(`0`),
   #        `1` = as.double(`1`))
 
-# write.csv(Comp_ChiSq, "./data/output/VBPMeasurementValidation/Comp_ChiSq.csv")
+# write.csv(Comp_ChiSq, "./data/output/Comp_ChiSq.csv")
 
 chisq.test(Comp_ChiSq[-1], correct = FALSE)
 ```
 
-There is a significant difference (X^2 (1, N = 1691) = 11.226, p < .001) between the Report Data and the Real Data. 
+There is a significant difference (X\^2 (1, N = 1691) = 11.226, p \< .001) between the Report Data and the Real Data.
 
-**This means that the validity of the HCA Value Based Purchasing Quality Roster (VBPQR) is not strong enough to draw inferences from the data.** 
+**This means that the validity of the HCA Value Based Purchasing Quality Roster (VBPQR) is not strong enough to draw inferences from the data.**
 
 ```{r}
 #| label: Chi Square Figure
@@ -1107,19 +1164,16 @@ Because HCA categorizes their PBM claims in terms of Generic Product Identifier 
 ::: panel-tabset
 ### Description {#sec-description}
 
-The HEDIS My2023 Medication List Names identifies the eligible medications by providing the respective NDC numbers[^7]. The AHCCCS Preferred Drug List is used to match NDC numbers to GPI numbers based on medication name[^8].
-
-[^7]: https://www.ncqa.org/hedis/
-[^8]: AHCCCS Preferred Drug List. *Arizona Health Care Cost Containment System*. https://www.azahcccs.gov/Members/Pharmacy/
+The HEDIS My2023 Medication List Names identifies the eligible medications by providing the respective NDC numbers[^9]. The AHCCCS Preferred Drug List is used to match NDC numbers to GPI numbers based on medication name[^10].
 
 ### Procedure {#sec-procedure}
 
 In order to create a cross walk that ties the NDC codes from NCQA to the GPI codes from Health Choice, we took the following steps:
 
--   Import the My2023 Medication to Code data from the My2023 Medication List Directory[^7]
+-   Import the My2023 Medication to Code data from the My2023 Medication List Directory[^11]
 -   Filter the data to only include Antidepressant Medications
 -   Rename some columns to provide consistency across tables
--   Import the AHCCCS Preferred Drug List [^8]. A side by side list of NDC and GPI codes is incredibly difficult to come by, and so we are using this list from 2019. Fortunately NDC and GPI are very stable.
+-   Import the AHCCCS Preferred Drug List [^12]. A side by side list of NDC and GPI codes is incredibly difficult to come by, and so we are using this list from 2019. Fortunately NDC and GPI are very stable.
 -   Rename some columns to provide consistency across tables.
 -   Filter Therapeutic Class for Antidepressant Other, Antidepressant SSRI
 -   Merge the NCQA data set with the AHCCCS data set by matching on the the NDC variable.
@@ -1128,7 +1182,7 @@ In order to create a cross walk that ties the NDC codes from NCQA to the GPI cod
 
 ```{r}
 #| label: CreateRxIdentifierCrosswalk
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true
 #| code-fold: show
@@ -1196,12 +1250,19 @@ concatenated_values_GPI <- paste0("'",    My2023NDCtoGPICrosswalk$GPI_GenericPro
 ```
 :::
 
+[^9]: HEDIS Criteria reference
+
+[^10]: HEDIS Criteria reference
+
+[^11]: HEDIS Criteria reference
+
+[^12]: HEDIS Criteria reference
+
 ## Creation of AMM Member Follow Up List
 
 ::: panel-tabset
 
 ### Description
-
 
 ### Procedure
 
@@ -1213,7 +1274,7 @@ The ***Validation_Matrix*** was transformed and rejoined with ***IPClaims_Summar
 
 ```{r}
 #| label: AMM Member Follow Up List
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true
 #| code-fold: show
@@ -1232,7 +1293,7 @@ MemberFollowUpList <-
         all = TRUE) |>
   drop_na(Match)
 
-# write.csv(MemberFollowUpList,"./data/output/VBPMeasurementValidation/FUH7_MemberFollowUpList.csv")
+# write.csv(MemberFollowUpList,"./data/output/AMM_MemberFollowUpList.csv")
 
 ```
 
@@ -1241,8 +1302,8 @@ MemberFollowUpList <-
 Words... the results were evaluated in many ways
 
 ::: panel-tabset
-
 ### Top 10 Label Name
+
 ```{r}
 #| label: Eval Label Name
 #| eval: true
@@ -1260,6 +1321,7 @@ MemberFollowUpList |>
   kable()
 
 ```
+
 ```{r}
 #| label: Eval Label Name 2
 #| eval: true
@@ -1267,8 +1329,6 @@ MemberFollowUpList |>
 #| echo: true 
 #| warning: false
 #| error: false
-
-library(scales)
 
 MemberFollowUpList |>
   filter(!is.na(LabelName)) |>
@@ -1290,6 +1350,7 @@ MemberFollowUpList |>
 ```
 
 ### Prescription Fill Trend
+
 ```{r}
 #| label: Eval Date of Service
 #| eval: true
@@ -1297,8 +1358,6 @@ MemberFollowUpList |>
 #| echo: true 
 #| warning: false
 #| error: false
-
-library(lubridate)
 
 MemberFollowUpList |>
   mutate(dtefilled = as.Date(dtefilled)) |>
@@ -1319,9 +1378,4 @@ MemberFollowUpList |>
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
-
 :::
-
-[^7]: HEDIS Criteria reference
-
-[^8]: HEDIS Criteria reference
