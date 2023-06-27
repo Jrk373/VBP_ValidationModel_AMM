@@ -274,7 +274,7 @@ WHERE
 
 ```{r}
 #| label: IPSDTest
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| code-fold: show
@@ -351,7 +351,7 @@ This is the code my friends
 
 ```{r}
 #| label: NMHTest
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| code-fold: show
@@ -428,7 +428,7 @@ Pull the list of MDDx diagnosis codes
 
 ```{r}
 #| label: MajDepressiveDxTest
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -534,7 +534,7 @@ AND CASE WHEN v.Code IS NOT NULL THEN 'True' ELSE 'False' END = 'True';
 
 ```{r}
 #| label: MDDxClaimsImport
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -548,7 +548,7 @@ MDDxClaims <- read_csv("./data/MDDxClaims_20230602.csv")
 
 ```{r}
 #| label: MDDxClaims1
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -613,7 +613,7 @@ Here's the code
 
 ```{r}
 #| label: Continuous Enrollment
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -655,9 +655,10 @@ PBMClaims_CETest1$CEDaysDiff_Post <- ifelse(PBMClaims_CETest1$bhhEffectiveDate <
 today <- Sys.Date()
 
 # If disenrollment date is null (meaning still enrolled), then return the number of days between dtefilled and today. If the disenrollmentDate is not null (Meaning the person is disenrolled) then calculate the number of days between the dtefilled and the disenrollment date.
+
 PBMClaims_CETest1$CEDaysDiff_Post <- ifelse(is.na(PBMClaims_CETest1$disenrollmentDate),
                                    as.integer(difftime(today, PBMClaims_CETest1$dtefilled, units = "days")),
-                                   ifelse(PBMClaims_CETest$disenrollmentDate > PBMClaims_CETest1$dtefilled,
+                                   ifelse(PBMClaims_CETest1$disenrollmentDate > PBMClaims_CETest1$dtefilled,
                                           as.integer(difftime(PBMClaims_CETest1$disenrollmentDate, PBMClaims_CETest1$dtefilled, units = "days")),
                                           NA))
 
@@ -679,7 +680,7 @@ PBMClaims_CE_Test <- PBMClaims_CE_Test %>%
 
 ```{r}
 #| label: AMM Eligibility Test
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -768,7 +769,7 @@ A copy of the file ***VBPQR_AllAPsCombined_Cleaned,*** was stored as ***VBPQR_Al
 
 ```{r}
 #| label: Import VBPQR data
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -811,7 +812,7 @@ DataRaw_VBPQR_AllAPsCombined <- rbind(
 
 ```{r}
 #| label: Wrangle VBPQR data
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -837,7 +838,7 @@ VBPQR_AllAPsCombined_Cleaned$`SubMeasure ID` <- substr(VBPQR_AllAPsCombined_Clea
 
 ```{r}
 #| label: Wrangle VBPQR data 2
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -861,16 +862,17 @@ VBPQR_AllAPsCombined_Cleaned <- VBPQR_AllAPsCombined_Cleaned |>
 
 # AMM Validation Data Modeling
 
-The terms for the Validation Model for AMM are *Conceptual* and *Logical*. This model will help to define the systems surrounding measurement of AMM. This model also outlines a set of logical rules and structures of data to be used across agencies. 
-
-This model extracts data from multiple VBP Quality Reports and aggregates it them into a single data set. It also collects adjudicated claims data from the Health Choice data warehouse. 
-
-The validation of VBP cases against adjudicated claims will tell us if the reports received through Health Choice's 3rd party vendor are reliable and valid. 
-
+The terms for the Validation Model for AMM are *Conceptual* and *Logical*. This model will help to define the systems surrounding measurement of AMM. This model also outlines a set of logical rules and structures of data to be used across agencies and measures. 
 
 ::: panel-tabset
 
-## Test Design
+## Description of Test Design
+
+This model extracts data from multiple VBP Quality Reports and aggregates it them into a single data set. It also collects adjudicated claims data from the Health Choice data warehouse. 
+
+The 2 data sets are then joined to create the Validation Matrix, comparing VBP cases against adjudicated claims.  
+
+***The Validation Matrix is the table that will be used for evaluation! Phew! :)***
 
 Image of test design here
 ![The Alliance Value Based Purchasing Validation Model for AMM](./images/puppy-placeholder.jpg)
@@ -883,13 +885,28 @@ Image of test design here
 
 ### Real Data: Adjudicated Claims
 
-The ***IPClaims_validation*** data frame was loaded to the test model. The claims data was then summarized by counting the instances of HEDIS My2022 eligible claims per member. This creates a vector of unduplicated Member IDs called ***Claims_Unduplicated***.
+The ***AMMEligibilityTest*** claims data frame was loaded to the test model. It was then summarized by counting the instances of HEDIS My2022 eligible claims per member. This creates a vector of unduplicated Member IDs called ***AMMClaims_Unduplicated***.
+
+### Merge Data to One Table
+
+The ***VBP_Unduplicated*** and the ***AMMClaims_Unduplicated*** were full outer joined, meaning that all rows of data from both variables are included, regardless of match, on the variable *MemberID*. The resulting data frame is called ***Validation_Matrix***.
+
+-   This table contains all of the unduplicated VBPQR MemberIDs, AND all of the unduplicated Claims MemberIDs.
+
+The data is assessed for cases where a VBP MemberID is validated against a Claims MemberID.
+-   A positive result is called "Match", and a negative result is called "NoMatch"
+  
+### The Validation Matrix
+
+-   The ***Validation_Matrix*** was created by reducing the VBP Quality Roster and adjudicated claims to unduplicated observations of each *MemberID*, and then matching the 2 data sets by *MemberID*.
+
+***The Validation_Matrix is the table that will be used for evaluation! Phew! :)***
 
 ## Code
 
 ```{r}
 #| label: Modeling VBP Unduplicated
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -905,7 +922,7 @@ VBP_Unduplicated <- VBPQR_AllAPsCombined_Cleaned |>
 
 ```{r}
 #| label: Modeling Claims Unduplicated
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -921,23 +938,181 @@ AMMClaims_Unduplicated <- AMMEligibilityTest |>
 
 ```
 
+```{r}
+#| label: Modeling Validation Matrix
+#| eval: true
+#| include: true
+#| echo: true 
+#| warning: false
+#| error: false
+
+Validation_Matrix <- 
+  merge(x = VBP_Unduplicated,
+        y = AMMClaims_Unduplicated,
+        by = "MemberID",
+        all = TRUE) |> 
+  rename("VBP" = n.x,
+         "claims" = n.y) |> 
+  mutate(Match = if_else((is.na(VBP) | is.na(claims)), "NoMatch", "Match"))
+
+# write.csv(Validation_Matrix, "./data/output/VBPMeasurementValidation/ValidationMatrix.csv")
+```
+
+## Summary
+
+***VBP Reports***
+
+-   **8** VBP report details sheets were imported, merged and cleaned, creating ***DataRaw_VBPQR_AllAPsCombined*** with `r nrow(DataRaw_VBPQR_AllAPsCombined)` observations of `r ncol(DataRaw_VBPQR_AllAPsCombined)` variables.
+
+-   ***VBPQR_AllAPsCombined_Cleaned*** was created from the master to isolate instances of FUH7, and then select for *Member ID*, ultimately yielding `r nrow(VBPQR_AllAPsCombined_Cleaned)` observations of MemberIDs.
+
+***Claims***
+
+-   
+** Needs rewording for PBM claims and MDDx Claims with inlione code
+
+**
+
 :::
 
+# Results
+
+## Validating Report Data using Real Data
+
+The ***VBP_Unduplicated*** and the ***AMMClaims_Unduplicated*** were observed from left to right, meaning that all observations of data from ***VBP_Unduplicated*** are included, while ***Claims_Unduplicated*** are only included if matched with ***VBP_Unduplicated*** on the variable *Member ID*.
+
+-   `r Validation_Matrix |> filter(Match == "Match") |> count()` of the `r nrow(Validation_Matrix)` (`r Validation_Matrix |> filter(Match == "Match") |> count() / nrow(Validation_Matrix)`)VBP members were validated against an eligible AMM Claims member, with `r Validation_Matrix |> filter(Match == "NoMatch") |> count()` (`r Validation_Matrix |> filter(Match == "NoMatch") |> count() / nrow(Validation_Matrix)`) not matched.
+
+### Analysis of impact on false eligible member events:
+
+Overall Compliance of All Reported VBP QR Events (Comp_ChiSq):
+
+```{r}
+#| label: Compliance Table
+#| eval: true
+#| include: true
+#| echo: true 
+#| warning: false
+#| error: false
+
+# Rename the member Id column
+VBPQR_AllAPsCombined_Cleaned2 <- VBPQR_AllAPsCombined_Cleaned2 %>%
+  rename(MemberID = `Member ID`)
+
+# transform VBP_Rep_Comp for compliance
+Compliance <-
+  merge(x = Validation_Matrix,
+        y = VBPQR_AllAPsCombined_Cleaned2,
+        by = "MemberID",
+        all.y = TRUE)
+
+colnames(Compliance)[6] <- "Gap_Status"
+#####
+# write.csv(Compliance, "./data/output/VBPMeasurementValidation/Compliance.csv")
+
+# write.csv(Compliance, "C:/Users/RyanK/OneDrive - The NARBHA Institute/Documents - Data Force/Projects/AllianceIntranetSupport/data/Compliance.csv")
+```
+
+-   `r Compliance |> filter(Gap_Status == "OPEN") |> nrow()` Non-Compliant
+
+-   `r Compliance |> filter(Gap_Status == "CLOSED") |> nrow()` Compliant
+
+Compliance by VBP Members Matched with Claim:
+
+-   `r Compliance |> filter(Gap_Status== "OPEN" & Match == "Match") |> nrow()`: Matched, NonCompliant(MNC)
+
+-   `r Compliance |> filter(Gap_Status== "CLOSED" & Match == "Match") |> nrow()`: Matched, Compliant (MC)
+
+-   `r Compliance |> filter(Gap_Status== "OPEN" & Match == "NoMatch") |> nrow()`: NonMatched, NonCompliant (NMNC)
+
+-   `r Compliance |> filter(Gap_Status== "CLOSED" & Match == "NoMatch") |> nrow()`: NonMatched, Compliant (NMC)
+
+## Chi Squared Test
+
+Q: What is the impact of the non-Matched member events?
+
+Chi squared test was run at alpha = .05. The Pearson's chi-squared test can be used to confirm if there is a significant difference between the expected result and the observed result in this comparison.
+
+```{r}
+#| label: Chi Squared Test
+#| eval: true
+#| include: true
+#| echo: true 
+#| warning: false
+#| error: false
+
+
+# transform for Chi Squared test
+Comp_ChiSq <- Compliance |> 
+    select(Match, Gap_Status) |> 
+  group_by(Match, Gap_Status) |>
+  #mutate(Numerator = as.character(Numerator)) |> 
+  count() |> 
+  pivot_wider(names_from = "Gap_Status",
+              values_from = "n")
+  # mutate(`0` = as.double(`0`),
+  #        `1` = as.double(`1`))
+
+# write.csv(Comp_ChiSq, "./data/output/VBPMeasurementValidation/Comp_ChiSq.csv")
+
+chisq.test(Comp_ChiSq[-1], correct = FALSE)
+```
+
+There is a significant difference (X^2 (1, N = 1691) = 11.226, p < .001) between the Report Data and the Real Data. 
+
+**This means that the validity of the HCA Value Based Purchasing Quality Roster (VBPQR) is not strong enough to draw inferences from the data.** 
+
+```{r}
+#| label: Chi Square Figure
+#| eval: true
+#| include: true
+#| echo: true 
+#| warning: false
+#| error: false
+
+Compliance |> 
+  select(Match, Gap_Status) |> 
+  group_by(Match, Gap_Status) |>
+  mutate(Numerator = if_else(Gap_Status == "OPEN", "NonCompliant", "Compliant")) |> 
+  count() |> 
+ggplot(aes(fill=Match, x=Gap_Status, y=n)) +
+  geom_col() +
+  scale_fill_manual(values = c(Match = "#5e0932", NoMatch = "#119ec0"))+
+  labs(title = "VBP Report Member Event Validation",
+       subtitle = "Distinct member validation against adjudicated claims",
+       caption = "*From claims adjudicated through April 27, 2023") +
+  ylab("Number of Distinct Members") +
+  xlab("FUH7 Compliance Status")+
+theme_get()+
+  theme(
+    axis.title.y = element_text(vjust = 2),
+    plot.subtitle = element_text(face = "italic"),
+    plot.caption = element_text(face = "bold.italic", hjust = 0, vjust = -1)
+  )
+
+
+
+```
+
+# Discussion
+
+In this case the false claims are in our favor.
 
 # Appendix
-### Create a GPI to NDC crosswalk
+
+## Create a GPI to NDC crosswalk
 
 Because HCA categorizes their PBM claims in terms of Generic Product Identifier (GPI), but NCQA does theirs in terms of National Drug Code (NDC), we have to crosswalk the eligible AMM medications from NDC to their corresponding GPI codes. Fortunately, it's totally not a pain in the neck to backwards engineer this at all, lol.
 
 ::: panel-tabset
-#### Description {#sec-description}
+### Description {#sec-description}
 
 The HEDIS My2023 Medication List Names identifies the eligible medications by providing the respective NDC numbers[^7]. The AHCCCS Preferred Drug List is used to match NDC numbers to GPI numbers based on medication name[^8].
 
 [^7]: https://www.ncqa.org/hedis/
 [^8]: AHCCCS Preferred Drug List. *Arizona Health Care Cost Containment System*. https://www.azahcccs.gov/Members/Pharmacy/
 
-#### Procedure {#sec-procedure}
+### Procedure {#sec-procedure}
 
 In order to create a cross walk that ties the NDC codes from NCQA to the GPI codes from Health Choice, we took the following steps:
 
@@ -949,11 +1124,11 @@ In order to create a cross walk that ties the NDC codes from NCQA to the GPI cod
 -   Filter Therapeutic Class for Antidepressant Other, Antidepressant SSRI
 -   Merge the NCQA data set with the AHCCCS data set by matching on the the NDC variable.
 
-#### Code {#sec-code}
+### Code {#sec-code}
 
 ```{r}
 #| label: CreateRxIdentifierCrosswalk
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true
 #| code-fold: show
@@ -1019,6 +1194,132 @@ My2023NDCtoGPICrosswalk <- merge(
 concatenated_values_GPI <- paste0("'",    My2023NDCtoGPICrosswalk$GPI_GenericProductIdentifier, "'", collapse = ", ")
 
 ```
+:::
+
+## Creation of AMM Member Follow Up List
+
+::: panel-tabset
+
+### Description
+
+
+### Procedure
+
+The ***Validation_Matrix*** was transformed and rejoined with ***IPClaims_Summary*** to create a table that will be used to generate Member Follow Up Lists. This new table is called ***MemberFollowUpList***.
+
+***MemberFollowUpList is the table that is used for creating the Member Follow Up List*** for the *AMM* measure.
+
+### Code
+
+```{r}
+#| label: AMM Member Follow Up List
+#| eval: true
+#| include: true
+#| echo: true
+#| code-fold: show
+#| warning: false
+#| error: false
+
+# Using the copy of VBPQR_AllAPsCombined_Cleaned we made above, rename MemberID to match
+# VBPQR_AllAPsCombined_Cleaned2 <- VBPQR_AllAPsCombined_Cleaned2 |>
+#   rename("MemberID" = `Member ID`)
+
+# Rejoin the matched and non-matched MemberIDs to their claims data
+MemberFollowUpList <- 
+   merge(x = Validation_Matrix,
+        y = AMMEligibilityTest,
+        by = "MemberID",
+        all = TRUE) |>
+  drop_na(Match)
+
+# write.csv(MemberFollowUpList,"./data/output/VBPMeasurementValidation/FUH7_MemberFollowUpList.csv")
+
+```
+
+## Evaluation of Validated Data
+
+Words... the results were evaluated in many ways
+
+::: panel-tabset
+
+### Top 10 Label Name
+```{r}
+#| label: Eval Label Name
+#| eval: true
+#| include: true
+#| echo: true 
+#| warning: false
+#| error: false
+
+MemberFollowUpList |> 
+  filter(!is.na(LabelName)) |>
+  group_by(LabelName) |> 
+  summarise(percent = n() / nrow(MemberFollowUpList) * 100) |>
+  arrange(desc(percent)) |>
+  head(10) |>
+  kable()
+
+```
+```{r}
+#| label: Eval Label Name 2
+#| eval: true
+#| include: true
+#| echo: true 
+#| warning: false
+#| error: false
+
+library(scales)
+
+MemberFollowUpList |>
+  filter(!is.na(LabelName)) |>
+  group_by(LabelName) |>
+  summarise(percent = n() / nrow(MemberFollowUpList) * 100) |>
+  filter(percent >= 1) |>
+  arrange(LabelName) |>
+  ggplot(aes(x = percent, y = reorder(LabelName, percent))) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  ylab(NULL) +
+  xlab("Percentage of Total Prescription Fills") +
+  ggtitle("Horizontal Bar Chart of Label Names with at least 1%") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(angle = 0, hjust = 1, margin = margin(r = 5)),
+        axis.title.y = element_blank(),
+        plot.title = element_text(hjust = 1.0),
+        axis.text.x = element_text(hjust = 0),
+        axis.text.y.right = element_text(hjust = 0))
+```
+
+### Prescription Fill Trend
+```{r}
+#| label: Eval Date of Service
+#| eval: true
+#| include: true
+#| echo: true 
+#| warning: false
+#| error: false
+
+library(lubridate)
+
+MemberFollowUpList |>
+  mutate(dtefilled = as.Date(dtefilled)) |>
+  mutate(month = floor_date(dtefilled, "month")) |>
+  filter(month >= as.Date("2022-04-01") & month <= as.Date("2023-03-31")) |>
+  count(month) |>
+  ggplot(aes(x = month, y = n)) +
+  geom_line() +
+  geom_vline(xintercept = as.Date("2022-10-01"), linetype = "dashed", color = "red") +
+  annotate("text", x = as.Date("2022-10-01"), y = max(MemberFollowUpList$n), label = "End RBHA Contract", 
+           vjust = -15.0, hjust = -0.025, color = "red") +
+  scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +
+  scale_y_continuous(labels = comma) +
+  ylab("Number of Fills") +
+  xlab(NULL) +
+  ggtitle("Frequency of Antidepressant Medication Fills over Time") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
 :::
 
 [^7]: HEDIS Criteria reference
