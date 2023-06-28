@@ -1,9 +1,10 @@
 ---
 title: "NCQA My HEDIS 2023 Validation Model"
-subtitle: "Antidepresant Medication Management"
+subtitle: "Antidepressant Medication Management"
 author: 
   name: "John Ryan Kivela, MA"
   email: "Ryan.Kivela@narbha.org"
+  affiliation: "The Alliance ACO"
 date: today
 date-format: long
 format:
@@ -15,6 +16,8 @@ format:
     code-fold: true
     footnotes-hover: true
 ---
+
+# Setup
 ```{r}
 #| label: Setup
 #| eval: true
@@ -46,8 +49,15 @@ InLineCode <- data.frame(
     NMHend_date = as.Date("2023-01-15")
 )
 
-```
+# Define custom inline code hook
+comma_separator_hook <- function(x) {
+  formatted <- format(x, big.mark = ",")
+  knitr::asis_output(formatted)
+}
 
+# Set the inline code hook globally
+knitr::knit_hooks$set(inline = comma_separator_hook)
+```
 
 ```{r}
 #| label: Demo Data
@@ -94,22 +104,15 @@ Comp_ChiSq <- read.csv("./data/output/Comp_ChiSq.csv")
 MemberFollowUpList <- read.csv("./data/output/AMM_MemberFollowUpList.csv")
 ```
 
-
 # Welcome *(Bien Venido)*
 
 Hello,
 
-This project is a model that compares Report Data with Real Data by comparing the Health Choice Value Based Purchasing Quality Roster (VBPQR)[^1] for Antidepressant Medication Management (AMM) with Health Choice adjudicated claims. This project is similar in many ways to the VBP Validation Model for Follow Up after Hospitalization (FUH)[^2].
-
-[^1]: Health Choice Arizona. (2023). *Value Based Purchasing Quality Roster*
-
-[^2]: Kivela, J.R. (2023). Value Based Purchasing Data Validation Model. *The Northern Arizona Regional Behavioral Health Alliance*.
+This project compares Report Data with Real Data by comparing the Health Choice Value Based Purchasing Quality Roster (VBPQR)[^1] for Antidepressant Medication Management (AMM) with Health Choice adjudicated claims. This project is similar in many ways to the VBP Validation Model for Follow Up after Hospitalization (FUH)[^2].
 
 The guidelines for antidepressant medication are far more nuanced[^3]. Nonetheless we have endeavored to define the eligible population using adjudicated claims, measuring our Real Data against the VBP Quality Report Data.
 
-[^3]: https://www.ncqa.org/hedis/
-
-The results were surprising! While our analysis of the FUH7 measure have repeatedly demonstrated an underrating of Alliance performance, our first look at AMM seems to show an *overrating*, not that there's anything wrong with that.
+The results were surprising! While our analysis of the FUH7 measure have repeatedly demonstrated an underrating of Alliance performance, our first look at AMM seems to show the opposite, an *overrating*, not that there's anything wrong with that.
 
 We hope you enjoy reading this data story. We are always looking for new collaborators, so please reach out and share your ideas.
 
@@ -117,9 +120,13 @@ Sincerely,
 
 Ryan
 
-Image of overall here ![The Alliance Value Based Purchasing Validation Model for AMM](./images/puppy-placeholder.jpg)
+[^1]: Health Choice Arizona. (2023). *Value Based Purchasing Quality Roster*
 
+[^2]: Kivela, J.R. (2023). Value Based Purchasing Data Validation Model. *The Northern Arizona Regional Behavioral Health Alliance*.
 
+[^3]: NCQA. (2023). *HEDIS and Performance Measurement*. https://www.ncqa.org/hedis/
+
+![The Alliance NCQA HEDIS My2023 Eligibility Model for AMM](./images/AMMEligibilityModel.png)
 
 ## The thing about measuring VBP
 
@@ -130,20 +137,17 @@ The Alliance wants its providers to be their best selves and to be recognized. L
 So, in January 2023 we developed a validation model for the Follow Up after Hospitalization (FUH) HEDIS measure.
 
 ::: callout-tip
-### The VBP Validation Model FUH7 (2023): Key Takeaways:
+### The VBP Validation Model FUH7 (2023), Key Takeaways:
 
 -   Created a validated data model that can be used to identify eligible member events for FUH7
--   The core logic can be used to develop models for other HEDIS/NCQA measures.
--   The research affirmed that the providers were correct. They were indeed underrated for the 2022 measurement year and deserved a higher score by about 4 percentage points.
+-   Core logic can be used to develop models for other HEDIS/NCQA measures
+-   Research affirmed providers were underrated for the 2022 measurement year
+-   Providers deserved a higher score by about 4 percentage points
 :::
 
 ### So what's next?
 
 That brings us to the new measurement year, January 2023 to December 2023. In this project the VBP Validation Model is going to be applied to the Antidepressant Medication Management (AMM) HEDIS My2023[^4] performance measure.
-
-[^4]: https://www.ncqa.org/hedis/
-
-This is the first time that anyone in the HCA network has done this assessment and we hope the results are illuminating.
 
 This model compares **Report Data** from the VBP Quality Roster with **Real Data** from adjudicated claims.
 
@@ -157,19 +161,21 @@ The business objectives are twofold:
 -   Build a data model for validating eligibility for the AMM eligible population
 -   Determine impact of measurement on Alliance ACO performance scores
 
+[^4]: NCQA. (2023). *HEDIS Measures and Technical Resources*. https://www.ncqa.org/hedis/measures/
+
 ## Why invest in this research?
 
 Inaccurate measurement of VBP performance leads to an invalid assessment of the Alliance Providers' delivery of services to their patients.
 
 In previous years, Alliance providers were underrated on Follow Up after Hospitalization (FUH7) by at least 4 percentage points[^5].
 
-[^5]: Kivela, J.R. (2023). Value Based Purchasing Data Validation Model. *The Northern Arizona Regional Behavioral Health Alliance*.
-
 ![Alliance Provider performance scores were underated (red blocks) by at least 4 percentage points in 2022](./images/Fig_sup_Compliance.png)
 
 Underrating provider performance frustrates leadership and dampens the spirits of the clinical teams as they do this very difficult work.
 
 Accurate measurement offers a better opportunity to identify patients in need, maximize financial incentives associated with performance, and support provider morale.
+
+[^5]: Kivela, J.R. (2023). Value Based Purchasing Data Validation Model. *The Northern Arizona Regional Behavioral Health Alliance*.
 
 # Setting up the experiment
 
@@ -181,9 +187,9 @@ This manuscript is written using Brisk-DM. Brisk-DM is a structure for doing dat
 
 At the time of this writing, The Alliance has received the first 3 months of VBP Quality Rosters the 2023 measurement year. Our application of the VBP Validation Model for FUH7 in June 2023 revealed a similar pattern to 2022 where we found that performance scores for FUH were underrated[^7].
 
-[^7]: HEDIS Criteria reference
-
 The results for FUH are under further investigation while we develop this model for AMM.
+
+[^7]: Kivela, J.R. (June, 2023). Value Based Purchasing Report. *The Northern Arizona Regional Behavioral Health Alliance*.
 
 ## Hablemos de dato (Let's talk about the data)
 
@@ -191,33 +197,27 @@ This data model is simple in concept, but complex in design. The model compares 
 
 ### What are the data sources?
 
-+----------------------------------------------------------------------------------------------------------------------------------+---+-----------------------------------------------------------------------------------+
-| VBP Quality Roster                                                                                                               |   | Adjudicated Claims                                                                |
-+:=================================================================================================================================+===+:==================================================================================+
-| -   Health Choice receives this data from third party vendor, Cotivity                                                           |   | -   A data set of adjudicated claims queried directly from the HCA data warehouse |
-|                                                                                                                                  |   |                                                                                   |
-| -   An excel workbook containing a roster of the members deemed eligible for VBP HEDIS NCQA measures including compliance status |   | -   Records are gathered from the Claims and PBM databases                        |
-|                                                                                                                                  |   |                                                                                   |
-| -   The Alliance receives individual rosters for each Alliance Provider                                                          |   | -   Claims are extracted for all eligible service codes for the measurement year (8 individual files)  |
-+----------------------------------------------------------------------------------------------------------------------------------+---+-----------------------------------------------------------------------------------+
+ 
+|VBP Quality Roster | | Adjudicated Claims |
+|--|-|--|
+| Health Choice receives this data from third party vendor, Cotivity| | A data set of adjudicated claims queried directly from the HCA data warehouse|            
+| An excel workbook containing a roster of the members deemed eligible for VBP HEDIS NCQA measures including compliance status | | Records are gathered from the Claims and PBM databases. |
+|  The Alliance receives individual rosters for each Alliance Provider.| | Claims are extracted for all eligible service codes for the measurement year (8 individual files). |
 
 ### Is the data we use reliable?
 
-+-------------------------------------------------------------------------------------------------------------------------+---+--------------------------------------------------------------------------------------------------------------------------------------+
-| VBP Quality Roster                                                                                                      |   | Adjudicated Claims                                                                                                                   |
-+:========================================================================================================================+===+:=====================================================================================================================================+
-| -   The outstanding question with the VBPQR is if the underlying data from the third party vendor Cotivity is accurate. |   | -   Claims data is of the highest quality as it is compiled and reviewed extensively by Health Choice for its own business purposes. |
-|                                                                                                                         |   |                                                                                                                                      |
-| -   The report quality itself is very high as it is compiled by Health Choice Business Intelligence staff.              |   | -   The quality of this data is also reviewed by state and federal regulation entities, like AHCCCS                                  |
-|                                                                                                                         |   |                                                                                                                                      |
-| -   The underlying data is what is under investigation                                                                  |   |                                                                                                                                      |
-+-------------------------------------------------------------------------------------------------------------------------+---+--------------------------------------------------------------------------------------------------------------------------------------+
+| VBP Quality Roster | | Adjudicated Claims |
+|--|-|--|
+| The outstanding question with the VBPQR is if the underlying data from the third party vendor Cotivity is accurate. | | Claims data is of the highest quality as it is compiled and reviewed extensively by Health Choice for its own business purposes. |
+| The report quality itself is very high as it is compiled by Health Choice Business Intelligence staff. | | The quality of this data is also reviewed by state and federal regulation entities, like AHCCCS. |
+| The underlying data is what is under investigation | | |
 
 ## The AMM Eligibility Model
 
-We now embark upon building a data set of eligible claims for the AMM measure. This process will be significantly more complicated than our previous model for FUH. The description of an eligible member event is very nuanced for AMM, but in short...
+We now embark upon building a data set of eligible claims for the AMM measure. This process will be significantly more complicated than our previous model for FUH. The description of an eligible member event is very nuanced for AMM.
 
-::: callout-tip
+![ ](./images/AMMEligibilityModel.png)
+
 ### An eligible member event is defined as follows:
 
 -   The individual is an adult, aged 18 or older, **and**
@@ -227,25 +227,16 @@ We now embark upon building a data set of eligible claims for the AMM measure. T
 -   The individual had continuous enrollment (***Test for Continuous Enrollment (CE)***) for
     -   105 days before the IPSD, **and**
     -   231 days after the IPSD
-:::
 
 Check out the visualization of the AMM Eligibility Model below. There are many components of this model with overlapping time frames. We will describe these steps in further detail in the next section.
 
-![AMM Eligibility Model (Kivela, 2023)](./data/DataModel/Graphic_AMMEligibilityModel2023.png){width=70%}
+![NCQA HEDIS My2023 AMM Eligibility Model](./data/DataModel/Graphic_AMMEligibilityModel2023.png)
+
 
 You may also think of the criteria as a tumbling bike lock. All four criteria must line up, *in the right order*, for the lock to open. Once unlocked, the resulting data set es El Dato Verdad, the **Real Data**.
 
-
-+------------------------------------------+----------------------------------------------------------------------------------------------------------------:+
-| **AMM Eligibility: Primary criteria:            | ![](./images/bikelock.jpg){fig-alt="A tumbling bike lock representing the AMM Model" align="right" width="75%"} |
-|                                          |                                                                                                                 |
-| -   Index Prescription Start Date (IPSD) |                                                                                                                 |
-| -   Negative Medication History (NMH)    |                                                                                                                 |
-| -   Major Depressive Diagnosis (MDDx)    |                                                                                                                 |
-| -   Continuous Enrollment (CE)           |                                                                                                                 |
-+------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
-
-All four criteria must line up, *in the right order*, for the lock to open. Once unlocked, the resulting data set es El Dato Verdad, the **Real Data**.
+| **AMM Eligibility, Primary criteria:**<br>1.  Index Prescription Start Date (IPSD)<br>2.  Negative Medication History (NMH)<br>3.  Major Depressive Diagnosis (MDDx)<br>4.  Continuous Enrollment (CE) | ![](./images/bikelock.jpg){fig-alt="A tumbling bike lock representing the AMM Model" align="right" width="75%"} |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
 
 ### The Index Prescription Start Date
 
@@ -667,6 +658,8 @@ First, confirm if the eligible event matches anyone on the enrollment roster.
 
 If yes, the compare: 1. The IPSD against the enrollment date and confirm that enrollment date is at least 105 days before the IPSD 2. The IPSD against the disenrollment date and confirm that the disenrollment date is at least 213 days after the IPSD
 
+[^8]: Kivela, J.R., McMillian, J., Tewa, V. (June 2023). The Alliance Progress Report. *The Northern Arizona Regional Behavioral Health Alliance*.
+
 #### Code
 
 Here's the code
@@ -772,7 +765,7 @@ AMMEligibilityTest <- AMMEligibilityTest %>%
 ```
 :::
 
-[^8]: Alliance progress report (Kivela 2023)
+
 
 ::: callout-tip
 ### AMM Eligibility, Check!
@@ -926,6 +919,8 @@ VBPQR_AllAPsCombined_Cleaned <- VBPQR_AllAPsCombined_Cleaned |>
 
 The terms for the Validation Model for AMM are *Conceptual* and *Logical*. This model will help to define the systems surrounding measurement of AMM. This model also outlines a set of logical rules and structures of data to be used across agencies and measures.
 
+![NCQA HEDIS My2023 Validation Model for AMM](./images/FullAMMValidationModel.png)
+
 ::: panel-tabset
 ## Description of Test Design
 
@@ -934,8 +929,6 @@ This model extracts data from multiple VBP Quality Reports and aggregates it the
 The 2 data sets are then joined to create the Validation Matrix, comparing VBP cases against adjudicated claims.
 
 ***The Validation Matrix is the table that will be used for evaluation! Phew! :)***
-
-Image of test design here ![The Alliance Value Based Purchasing Validation Model for AMM](./images/puppy-placeholder.jpg)
 
 ## Procedure
 
@@ -1019,30 +1012,36 @@ Validation_Matrix <-
 
 ## Summary
 
-***VBP Reports***
+### VBP Reports
 
 -   **8** VBP report details sheets were imported, merged and cleaned, creating ***DataRaw_VBPQR_AllAPsCombined*** with `r nrow(DataRaw_VBPQR_AllAPsCombined)` observations of `r ncol(DataRaw_VBPQR_AllAPsCombined)` variables.
 
 -   ***VBPQR_AllAPsCombined_Cleaned*** was created from the master to isolate instances of FUH7, and then select for *Member ID*, ultimately yielding `r nrow(VBPQR_AllAPsCombined_Cleaned)` observations of MemberIDs.
 
-***Claims***
+### Claims
 
--   \*\* Needs rewording for PBM claims and MDDx Claims with inlione code
+-   Pharmacy Records from HCA Pharmacy Benefit Manager were queried, including all claims for eligible AMM medications, for the date range including the IPSD and the NMH Tests. There were `r PBMClaims |> nrow()` records.
+-   Behavioral Health records were querried from the HCA behavioral health claims system for the date range including all eligible dates for a Major Depressive Diagnosis. There were `r MDDxClaims |> nrow()` records.
 
-\*\*
+### Enrollment
+-   Enrollment data was queried from the HCA Global Members database for the entire range of possible enrollment and disenrollment dates. There were `r GlobalMembers_orig |> nrow()` members identified.
 :::
 
 # Results
 
 ## Validating Report Data using Real Data
 
-The ***VBP_Unduplicated*** and the ***AMMClaims_Unduplicated*** were observed from left to right, meaning that all observations of data from ***VBP_Unduplicated*** are included, while ***Claims_Unduplicated*** are only included if matched with ***VBP_Unduplicated*** on the variable *Member ID*.
+In order to conduct the validation test, all records from **VBP_Unduplicated** are included, while **Claims_Unduplicated** records are only included if they have a positive match with **VBP_Unduplicated** on the variable *Member ID*.
 
--   `r Validation_Matrix |> filter(Match == "Match") |> count()` of the `r nrow(Validation_Matrix)` (`r Validation_Matrix |> filter(Match == "Match") |> count() / nrow(Validation_Matrix)`)VBP members were validated against an eligible AMM Claims member, with `r Validation_Matrix |> filter(Match == "NoMatch") |> count()` (`r Validation_Matrix |> filter(Match == "NoMatch") |> count() / nrow(Validation_Matrix)`) not matched.
+### Validation Matrix Results
+
+The results were as follows:
+
+-   Matched (Valid): `r Validation_Matrix |> filter(Match == "Match") |> nrow()` of the `r nrow(VBP_Unduplicated)` VBP members were validated against an eligible AMM Claims member. 
+-   Not-Matched (Not Valid): `r ((nrow(VBP_Unduplicated)) - (Validation_Matrix |> filter(Match == "Match") |> nrow()))`
+ were not matched.
 
 ### Analysis of impact on false eligible member events:
-
-Overall Compliance of All Reported VBP QR Events (Comp_ChiSq):
 
 ```{r}
 #| label: Compliance Table
@@ -1070,25 +1069,27 @@ colnames(Compliance)[6] <- "Gap_Status"
 # write.csv(Compliance, "C:/Users/RyanK/OneDrive - The NARBHA Institute/Documents - Data Force/Projects/AllianceIntranetSupport/data/Compliance.csv")
 ```
 
--   `r Compliance |> filter(Gap_Status == "OPEN") |> nrow()` Non-Compliant
+#### Overall Compliance of All Reported VBP Quality Roster Events:
 
--   `r Compliance |> filter(Gap_Status == "CLOSED") |> nrow()` Compliant
+-   Non-Compliant: `r Compliance |> filter(Gap_Status == "OPEN") |> nrow()` 
 
-Compliance by VBP Members Matched with Claim:
+-   Compliant: `r Compliance |> filter(Gap_Status == "CLOSED") |> nrow()` 
 
--   `r Compliance |> filter(Gap_Status== "OPEN" & Match == "Match") |> nrow()`: Matched, NonCompliant(MNC)
+#### Compliance by Validation:
 
--   `r Compliance |> filter(Gap_Status== "CLOSED" & Match == "Match") |> nrow()`: Matched, Compliant (MC)
+-   Matched, NonCompliant (MNC): `r Compliance |> filter(Gap_Status== "OPEN" & Match == "Match") |> nrow()` 
 
--   `r Compliance |> filter(Gap_Status== "OPEN" & Match == "NoMatch") |> nrow()`: NonMatched, NonCompliant (NMNC)
+-   Matched, Compliant (MC): `r Compliance |> filter(Gap_Status== "CLOSED" & Match == "Match") |> nrow()`
 
--   `r Compliance |> filter(Gap_Status== "CLOSED" & Match == "NoMatch") |> nrow()`: NonMatched, Compliant (NMC)
+-   NonMatched, NonCompliant (NMNC): `r Compliance |> filter(Gap_Status== "OPEN" & Match == "NoMatch") |> nrow()`
 
-## Chi Squared Test
+-   NonMatched, Compliant (NMC): `r Compliance |> filter(Gap_Status== "CLOSED" & Match == "NoMatch") |> nrow()`
 
-Q: What is the impact of the non-Matched member events?
+## Impact of the non-Matched member events
 
-Chi squared test was run at alpha = .05. The Pearson's chi-squared test can be used to confirm if there is a significant difference between the expected result and the observed result in this comparison.
+The Pearson's Chi-Square test can be used to confirm if there is a significant difference between the expected result and the observed result in this comparison. 
+
+Chi Square test was run at alpha = .05. 
 
 ```{r}
 #| label: Chi Squared Test
@@ -1115,9 +1116,9 @@ Comp_ChiSq <- Compliance |>
 chisq.test(Comp_ChiSq[-1], correct = FALSE)
 ```
 
-There is a significant difference (X\^2 (1, N = 1691) = 11.226, p \< .001) between the Report Data and the Real Data.
+There is a significant difference (*X^2* (1, *N*=1691) = 11.226, *p*<.001) between the four groups. 
 
-**This means that the validity of the HCA Value Based Purchasing Quality Roster (VBPQR) is not strong enough to draw inferences from the data.**
+The number of Compliant, Non-Valid members was disproportionately larger than the number of Non-Compliant, Non-Valid members. This indicates that the Alliance Providers performance level for AMM may have been artificially inflated and scored too high. 
 
 ```{r}
 #| label: Chi Square Figure
@@ -1132,20 +1133,25 @@ Compliance |>
   group_by(Match, Gap_Status) |>
   mutate(Numerator = if_else(Gap_Status == "OPEN", "NonCompliant", "Compliant")) |> 
   count() |> 
-ggplot(aes(fill=Match, x=Gap_Status, y=n)) +
+  ggplot(aes(fill=Match, x=Gap_Status, y=n)) +
   geom_col() +
-  scale_fill_manual(values = c(Match = "#5e0932", NoMatch = "#119ec0"))+
+  scale_fill_manual(values = c(Match = "#b60ef9", NoMatch = "#520096"),
+                    name = "Validation",
+                    labels = c("Valid", "Not-Valid")) +
   labs(title = "VBP Report Member Event Validation",
        subtitle = "Distinct member validation against adjudicated claims",
        caption = "*From claims adjudicated through April 27, 2023") +
   ylab("Number of Distinct Members") +
-  xlab("FUH7 Compliance Status")+
-theme_get()+
+  xlab("AMM2 Compliance Status") +
+  scale_x_discrete(labels = c("Compliant", "Non-Compliant")) +
   theme(
     axis.title.y = element_text(vjust = 2),
     plot.subtitle = element_text(face = "italic"),
     plot.caption = element_text(face = "bold.italic", hjust = 0, vjust = -1)
-  )
+  ) +
+  annotate("text", x = 1, y = 125, label = "p < .001", color = "#b60ef9", fontface = "bold")
+
+
 
 
 
@@ -1153,9 +1159,39 @@ theme_get()+
 
 # Discussion
 
-In this case the false claims are in our favor.
+## Eligibility Model
+
+The process of determining eligible cases for the AMM measurement is very complex. We hope that we were able to adequately describe the process and the nature of the resulting data set.
+
+After determining the eligible cases, the process of validating that list of members against the VBP Quality Roster is fairly straight forward, and follows an almost identical process to the FUH7 Validation.
+
+## Analysis Results
+
+The results of the validation process revealed that there was a significant difference between the comparison groups, and that in particular there is a disproportionately large number of Compliant, though Not Valid cases. 
+
+The results indicate that Alliance performance scores for Antidepressant Medication Management may be artificially inflated.
+
+## Conclusions
+
+Our goal is accuracy and transparency. With this in mind, The Alliance should keep a close eye on this measure. The current performance score is 58.43%, or +1.14 percentage points above the mean (See Appendix). Given what we now know from this research, this margin is tighter than it appears.
+
+We recommend further investigation into provider tools and innovations to improve the overall performance of the network. 
+
+This model will now be reviewed internally at the Alliance, and through the Joint Operating Committee of the Alliance and its parent organizations. 
+
+# Quality Reviews
+
+1.    Internal:
+2.    The Narbha Institute Leadership:
+3.    Joint Operating Committee:
 
 # Appendix
+
+## All Alliance Performance Measures
+
+![All Alliance Performance (Kivela, June 2023)](./images/2023-06-13_Tab_AllProvPerformance.png)[^9]
+
+[^9]: Kivela, J.R. (June, 2023). Value Based Purchasing Report. *The Northern Arizona Regional Behavioral Health Alliance*.
 
 ## Create a GPI to NDC crosswalk
 
@@ -1164,19 +1200,27 @@ Because HCA categorizes their PBM claims in terms of Generic Product Identifier 
 ::: panel-tabset
 ### Description {#sec-description}
 
-The HEDIS My2023 Medication List Names identifies the eligible medications by providing the respective NDC numbers[^9]. The AHCCCS Preferred Drug List is used to match NDC numbers to GPI numbers based on medication name[^10].
+The HEDIS My2023 Medication List Names identifies the eligible medications by providing the respective NDC numbers[^10]. The AHCCCS Preferred Drug List is used to match NDC numbers to GPI numbers based on medication name[^11].
+
+[^10]: NCQA. (2023). *HEDIS Measures and Technical Resources*. https://www.ncqa.org/hedis/measures/
+
+[^11]: Arizona Health Care Cost Containment System.*AHCCCS Drug List (Effective April 1, 2023)*. https://www.azahcccs.gov/Resources/Downloads/PharmacyUpdates/AHCCCS_DRUG_LIST_04012023.pdf
 
 ### Procedure {#sec-procedure}
 
 In order to create a cross walk that ties the NDC codes from NCQA to the GPI codes from Health Choice, we took the following steps:
 
--   Import the My2023 Medication to Code data from the My2023 Medication List Directory[^11]
+-   Import the My2023 Medication to Code data from the My2023 Medication List Directory[^12]
 -   Filter the data to only include Antidepressant Medications
 -   Rename some columns to provide consistency across tables
--   Import the AHCCCS Preferred Drug List [^12]. A side by side list of NDC and GPI codes is incredibly difficult to come by, and so we are using this list from 2019. Fortunately NDC and GPI are very stable.
+-   Import the AHCCCS Preferred Drug List [^13]. A side by side list of NDC and GPI codes is incredibly difficult to come by, and so we are using this list from 2019. Fortunately NDC and GPI are very stable.
 -   Rename some columns to provide consistency across tables.
 -   Filter Therapeutic Class for Antidepressant Other, Antidepressant SSRI
 -   Merge the NCQA data set with the AHCCCS data set by matching on the the NDC variable.
+
+[^12]: NCQA. (2023). *HEDIS Measures and Technical Resources*. https://www.ncqa.org/hedis/measures/
+
+[^13]: Arizona Health Care Cost Containment System. *AHCCCS Drug List (Effective April 1, 2023)*. https://www.azahcccs.gov/Resources/Downloads/PharmacyUpdates/AHCCCS_DRUG_LIST_04012023.pdf
 
 ### Code {#sec-code}
 
@@ -1250,14 +1294,6 @@ concatenated_values_GPI <- paste0("'",    My2023NDCtoGPICrosswalk$GPI_GenericPro
 ```
 :::
 
-[^9]: HEDIS Criteria reference
-
-[^10]: HEDIS Criteria reference
-
-[^11]: HEDIS Criteria reference
-
-[^12]: HEDIS Criteria reference
-
 ## Creation of AMM Member Follow Up List
 
 ::: panel-tabset
@@ -1296,13 +1332,14 @@ MemberFollowUpList <-
 # write.csv(MemberFollowUpList,"./data/output/AMM_MemberFollowUpList.csv")
 
 ```
+:::
 
 ## Evaluation of Validated Data
 
-Words... the results were evaluated in many ways
+Some exploratory analysis was conducted on the resulting data from this model. The results are included here for further reference, and we invite any innovations that spring from its review. 
 
 ::: panel-tabset
-### Top 10 Label Name
+### Top 10 Label Names
 
 ```{r}
 #| label: Eval Label Name
