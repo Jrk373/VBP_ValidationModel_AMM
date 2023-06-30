@@ -60,7 +60,7 @@ knitr::knit_hooks$set(inline = comma_separator_hook)
 
 ```{r}
 #| label: Demo Data
-#| eval: true
+#| eval: false  
 #| include: false
 #| echo: false
 #| warning: false
@@ -595,6 +595,8 @@ AND CASE WHEN v.Code IS NOT NULL THEN 'True' ELSE 'False' END = 'True';
 
 # Import the MDDxClaims from excel
 MDDxClaims <- read_csv("./data/MDDxClaims_20230602.csv")
+
+# write.csv(MDDxClaims, "./data/output/MDDxClaims.csv")
 ```
 
 ##### Conduct the MDDx Test
@@ -622,7 +624,7 @@ PBMClaims_MDDxTest$MDDxTestResult <- ifelse(abs(as.numeric(as.Date(PBMClaims_MDD
 # Select the columns of interest, change name to _MDDXTest
 PBMClaims_MDDxTest <- PBMClaims_MDDxTest[, c("PrimaryId", "clientID", "MemberID", "dtefilled", "IPSDTestResult", "NMHTestResult" , "MDDxTestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "AmtPaidFinal")]
 
-#write.csv(PBMClaims_MDDxTest, "./data/output/PBMClaims_MDDxTest.csv")
+# write.csv(PBMClaims_MDDxTest, "./data/output/PBMClaims_MDDxTest.csv")
 
 ```
 :::
@@ -733,7 +735,7 @@ PBMClaims_CE_Test <- PBMClaims_CETest1[, c("PrimaryId", "clientID", "MemberID", 
 PBMClaims_CE_Test <- PBMClaims_CE_Test %>%
   arrange(desc(PrimaryId), desc(dtefilled), IPSDTestResult)
 
-#write.csv(PBMClaims_CE_Test, "./data/output/PBMClaims_CE_Test.csv")
+# write.csv(PBMClaims_CE_Test, "./data/output/PBMClaims_CE_Test.csv")
 
 ```
 :::
@@ -778,6 +780,11 @@ AMMEligibilityTest <- AMMEligibilityTest %>%
 # write.csv(AMMEligibilityTest, "./data/output/AMMEligibilityTest.csv")
 
 # write.csv(AMMEligibilityTest, "./data/output/AMMEligibilityTest_Copy.csv")
+ 
+# Filter AMMEligibilityTest for only those cases that are eligible
+AMMEligibilityTest_AllEligible <- AMMEligibilityTest |> filter(AMMEligibilityTestResult == TRUE)
+
+# write.csv(AMMEligibilityTest_AllEligible, "./data/output/AMMEligibilityTest_AllEligible.csv")
 
 ```
 
@@ -913,7 +920,7 @@ VBPQR_AllAPsCombined_Cleaned$`SubMeasure ID` <- substr(VBPQR_AllAPsCombined_Clea
 VBPQR_AllAPsCombined_Cleaned2 <- VBPQR_AllAPsCombined_Cleaned |> 
   filter(`SubMeasure ID` == "AMM")
 
-# write.csv(VBPQR_AllAPsCombined_Cleaned2, "./data/output/VBPQR_AllAPsCombined_Cleaned2.csv")
+# write.csv(VBPQR_AllAPsCombined_Cleaned2, "./data/output/VBPQualityRoster_AMM.csv")
 
 # Isolate member ID for the validation
 VBPQR_AllAPsCombined_Cleaned <- VBPQR_AllAPsCombined_Cleaned |> 
@@ -991,7 +998,7 @@ VBP_Unduplicated <- VBPQR_AllAPsCombined_Cleaned |>
 #| warning: false
 #| error: false
 
-AMMClaims_Unduplicated <- AMMEligibilityTest |> 
+AMMClaims_Unduplicated <- AMMEligibilityTest_AllEligible |> 
   filter(MemberID != "NULL") |> 
   group_by(MemberID) |> 
   count()
@@ -1046,11 +1053,7 @@ In order to conduct the validation test, all records from VBP_Unduplicated are i
 
 ```{r}
 #| label: Compliance Table
-<<<<<<< HEAD
 #| eval: true
-=======
-#| eval: false
->>>>>>> 69384773c2650baff229975dc8fb15ce381f9591
 #| include: false
 #| echo: true 
 #| warning: false
@@ -1149,7 +1152,7 @@ The number of Compliant, Non-Valid members was disproportionately larger than th
 #| warning: false
 #| error: false
 
-Compliance |> 
+ChiSquare_Barchart <- Compliance |> 
   select(Match, Gap_Status) |> 
   group_by(Match, Gap_Status) |>
   mutate(Numerator = if_else(Gap_Status == "OPEN", "NonCompliant", "Compliant")) |> 
@@ -1172,9 +1175,11 @@ Compliance |>
   ) +
   annotate("text", x = 1, y = 125, label = "p < .001", color = "#b60ef9", fontface = "bold")
 
+# Save the plot as a PNG file
+# ggsave("./data/output/AMMchisquare_barchart.png", width = 7, height = 5, dpi = 300)
+# ggsave("C:/Users/RyanK/OneDrive - The NARBHA Institute/R_Studio/progressReport/images/20230630_AMMchisquare_barchart.png", width = 7, height = 5, dpi = 300)
 
-
-
+ChiSquare_Barchart
 
 ```
 
@@ -1207,6 +1212,31 @@ This model will now be reviewed internally at the Alliance, and through the Join
 3.    Joint Operating Committee:
 
 # Appendix
+
+## Analysis output files
+
+This project yields many tables of data along the way and places them in the "output" folder. The following is a table outlining the contents of that folder.
+
+|#| File Name | Description | Variables | Observations |
+|:-|:--|:-----|:-:|:-:|
+|1.| PBMClaims | The raw data claims from the PBM database | 20 | 196,520 |
+|2.| PBMClaims_NMHTest | PBMClaims + results from the IPSD and NMH tests | 22 | 196,520 |
+|3.| MDDxClaims | The raw data claims from the claims database | 17 | 265,000 |
+|4.| PBMClaims_MDDxTest | PBMClaims_NMHTest + results from the MDDx Test | 15 | 1,866,503 |
+|5.| PBMClaims_CE_Test | PBMClaims_MDDxTest + results from the CE Test | 18 | 2,206,190 |
+|6.| AMMElligibilityTest | PBMClaims_CE_Test + the final Elligibility test | 19 | 2,206,190 |
+|7.| AMMEligibilityTest_AllEligible | AMMEligibilityTest filtered for only eligibible cases | 19 | 23,993 |
+|8.| 2023-05-31_DataRaw_VBPQR_AllAPsCombined | The raw aggregated VBP QR data | 9 | 4,424 |
+|9.| VBPQualityRoster | The aggregated and cleaned VBP QR data | 10 | 4,319 |
+|10.| VBPQualityRoster_AMM | The VBPQualityRoster filtered for only AMM | 10 | 1,691 |
+|11.| VBP_Validation | The VBPQualityRoster filtered to only include Member ID | 1 | 1,691 |
+|12.| VBP_Unduplicated | An unduplicated list of members found on the VBP quality Roster for AMM | 2 | 1,691 |
+|13.| AMMClaims_Unduplicated | An unduplicated list of members with eligible claims for the AMM memasure | 2 | 1,758 |
+|14.| Validation Matrix | All unduplicated VBP and AMMClaims, matched on MemberID where possible | 4 | 3,326 |
+|15.| Compliance | The validation Matrix, only including validated members, recombined with VBPQR data for compliance status | 13 | 1,691 |
+|16.| Comp_ChiSq | A 2 x 2 matrix used for the Chi Square test | 3 | 2 |
+|17.| My2023NDCtoGPICrosswalk | The NDC to GP Crosswalk | 5 | 1,104 |
+|18.| AMM MemberFollowUpList | The list of people from the VALdation Martix, with thier matching indicators, recombined with PBM Claims data | 22 | 925,419 |
 
 ## All Alliance Performance Measures
 
