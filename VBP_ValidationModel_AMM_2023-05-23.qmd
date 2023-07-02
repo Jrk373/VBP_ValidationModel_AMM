@@ -1172,8 +1172,9 @@ ChiSquare_Barchart <- Compliance |>
     axis.title.y = element_text(vjust = 2),
     plot.subtitle = element_text(face = "italic"),
     plot.caption = element_text(face = "bold.italic", hjust = 0, vjust = -1)
-  ) +
-  annotate("text", x = 1, y = 125, label = "p < .001", color = "#b60ef9", fontface = "bold")
+  ) 
+# +
+#   annotate("text", x = 1, y = 125, label = "p < .001", color = "#b60ef9", fontface = "bold")
 
 # Save the plot as a PNG file
 # ggsave("./data/output/AMMchisquare_barchart.png", width = 7, height = 5, dpi = 300)
