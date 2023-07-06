@@ -60,7 +60,7 @@ knitr::knit_hooks$set(inline = comma_separator_hook)
 
 ```{r}
 #| label: Demo Data
-#| eval: false 
+#| eval: true 
 #| include: false
 #| echo: false
 #| warning: false
@@ -328,7 +328,7 @@ WHERE
 
 ```{r}
 #| label: IPSDTest
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| code-fold: show
@@ -344,7 +344,7 @@ PBMClaims$dtefilled <- as.Date(as.character(PBMClaims$dtefilled), format = "%Y%m
 # Convert character variable to date
 PBMClaims$AsOfDate <- as.Date(PBMClaims$AsOfDate, format = "%m/%d/%Y")
 
-write.csv(PBMClaims, "./data/output/PBMClaims.csv")
+# write.csv(PBMClaims, "./data/output/PBMClaims.csv")
 
 PBMClaims_NMHTest <- PBMClaims
 
@@ -419,7 +419,7 @@ Be patient. This part of the program takes about 20 minutes to run. If you think
 
 ```{r}
 #| label: NMHTest
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| code-fold: show
@@ -452,7 +452,7 @@ for (i in 1:nrow(PBMClaims_NMHTest)) {
     PBMClaims_NMHTest$NMHTestResult[i] <- "FALSE"
   }
 }
-write.csv(PBMClaims_NMHTest, "./data/output/PBMClaims_NMHTest.csv")
+# write.csv(PBMClaims_NMHTest, "./data/output/PBMClaims_NMHTest.csv")
 
 ```
 
@@ -513,7 +513,7 @@ The result is a big data solution consisting of over 1.7 million possible combin
 
 ```{r}
 #| label: MajDepressiveDxTest
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -619,7 +619,7 @@ AND CASE WHEN v.Code IS NOT NULL THEN 'True' ELSE 'False' END = 'True';
 
 ```{r}
 #| label: MDDxClaimsImport
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -628,14 +628,14 @@ AND CASE WHEN v.Code IS NOT NULL THEN 'True' ELSE 'False' END = 'True';
 # Import the MDDxClaims from excel
 MDDxClaims <- read_csv("./data/MDDxClaims_20230602.csv")
 
-write.csv(MDDxClaims, "./data/output/MDDxClaims.csv")
+# write.csv(MDDxClaims, "./data/output/MDDxClaims.csv")
 ```
 
 ##### Conduct the MDDx Test
 
 ```{r}
 #| label: MDDxClaims1
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -656,7 +656,7 @@ PBMClaims_MDDxTest$MDDxTestResult <- ifelse(abs(as.numeric(as.Date(PBMClaims_MDD
 # Select the columns of interest, change name to _MDDXTest
 PBMClaims_MDDxTest <- PBMClaims_MDDxTest[, c("PrimaryId", "clientID", "MemberID", "dtefilled", "IPSDTestResult", "NMHTestResult" , "MDDxTestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "AmtPaidFinal")]
 
-write.csv(PBMClaims_MDDxTest, "./data/output/PBMClaims_MDDxTest.csv")
+# write.csv(PBMClaims_MDDxTest, "./data/output/PBMClaims_MDDxTest.csv")
 
 ```
 
@@ -710,7 +710,7 @@ Compare the Index Prescription Start Date against the member enrollment roster d
 
 ```{r}
 #| label: Continuous Enrollment
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -773,7 +773,7 @@ PBMClaims_CE_Test <- PBMClaims_CETest1[, c("PrimaryId", "clientID", "MemberID", 
 PBMClaims_CE_Test <- PBMClaims_CE_Test %>%
   arrange(desc(PrimaryId), desc(dtefilled), IPSDTestResult)
 
-write.csv(PBMClaims_CE_Test, "./data/output/PBMClaims_CE_Test.csv")
+# write.csv(PBMClaims_CE_Test, "./data/output/PBMClaims_CE_Test.csv")
 
 ```
 
@@ -814,7 +814,7 @@ The resulting dataset presents a list of members with indicators for each of the
 ::: panel-tabset
 ```{r}
 #| label: AMM Eligibility Test
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -837,14 +837,14 @@ AMMEligibilityTest <- PBMClaims_CE_Test[, c("PrimaryId", "clientID", "MemberID",
 AMMEligibilityTest <- AMMEligibilityTest %>%
   arrange(desc(PrimaryId), desc(dtefilled), AMMEligibilityTestResult)
 
-write.csv(AMMEligibilityTest, "./data/output/AMMEligibilityTest.csv")
+# write.csv(AMMEligibilityTest, "./data/output/AMMEligibilityTest.csv")
 
-write.csv(AMMEligibilityTest, "./data/output/AMMEligibilityTest_Copy.csv")
+# write.csv(AMMEligibilityTest, "./data/output/AMMEligibilityTest_Copy.csv")
  
 # Filter AMMEligibilityTest for only those cases that are eligible
 AMMEligibilityTest_AllEligible <- AMMEligibilityTest |> filter(AMMEligibilityTestResult == TRUE)
 
-write.csv(AMMEligibilityTest_AllEligible, "./data/output/AMMEligibilityTest_AllEligible.csv")
+# write.csv(AMMEligibilityTest_AllEligible, "./data/output/AMMEligibilityTest_AllEligible.csv")
 
 ```
 :::
@@ -879,7 +879,7 @@ The *SubMeasureID* variable was filtered for this study to only include the *AMM
 
 ```{r}
 #| label: Import VBPQR data
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -915,16 +915,16 @@ DataRaw_VBPQR_AllAPsCombined <- rbind(
   vbp_tgc
 )
 
-# write to csv
+# # write to csv
 # date of file = date of VBP QR report
-write.csv(DataRaw_VBPQR_AllAPsCombined, "./data/output/2023-05-31_DataRaw_VBPQR_AllAPsCombined.csv")
+# write.csv(DataRaw_VBPQR_AllAPsCombined, "./data/output/2023-05-31_DataRaw_VBPQR_AllAPsCombined.csv")
 ```
 
 ##### Wrangle Said Data
 
 ```{r}
 #| label: Wrangle VBPQR data
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -946,14 +946,14 @@ VBPQR_AllAPsCombined_Cleaned <- VBPQR_AllAPsCombined_Cleaned[-1,]
 # 5/1/23 - Create SubMeasureID
 VBPQR_AllAPsCombined_Cleaned$`SubMeasure ID` <- substr(VBPQR_AllAPsCombined_Cleaned$Measure, 1, 3)
 
-write.csv(VBPQR_AllAPsCombined_Cleaned, "./data/output/VBPQualityRoster.csv")
-write.csv(VBPQR_AllAPsCombined_Cleaned, "C:/Users/KGLtd/OneDrive - The NARBHA Institute/Documents - Data Force/Projects/AllianceIntranetSupport/data/output/VBPQualityRoster.csv")
+# write.csv(VBPQR_AllAPsCombined_Cleaned, "./data/output/VBPQualityRoster.csv")
+# write.csv(VBPQR_AllAPsCombined_Cleaned, "C:/Users/KGLtd/OneDrive - The NARBHA Institute/Documents - Data Force/Projects/AllianceIntranetSupport/data/output/VBPQualityRoster.csv")
 
 ```
 
 ```{r}
 #| label: Wrangle VBPQR data 2
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -963,14 +963,14 @@ write.csv(VBPQR_AllAPsCombined_Cleaned, "C:/Users/KGLtd/OneDrive - The NARBHA In
 VBPQR_AllAPsCombined_Cleaned2 <- VBPQR_AllAPsCombined_Cleaned |> 
   filter(`SubMeasure ID` == "AMM")
 
-write.csv(VBPQR_AllAPsCombined_Cleaned2, "./data/output/VBPQualityRoster_AMM.csv")
+# write.csv(VBPQR_AllAPsCombined_Cleaned2, "./data/output/VBPQualityRoster_AMM.csv")
 
 # Isolate member ID for the validation
 VBPQR_AllAPsCombined_Cleaned <- VBPQR_AllAPsCombined_Cleaned |> 
   filter(`SubMeasure ID` == "AMM") |> 
   select(`Member ID`)
 
-write.csv(VBPQR_AllAPsCombined_Cleaned, "./data/output/VBP_Validation.csv")
+# write.csv(VBPQR_AllAPsCombined_Cleaned, "./data/output/VBP_Validation.csv")
 ```
 
 #### In lay terms
@@ -1042,7 +1042,7 @@ The data is assessed for cases where a VBP MemberID is validated against a Claim
 
 ```{r}
 #| label: Modeling VBP Unduplicated
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -1053,12 +1053,12 @@ VBP_Unduplicated <- VBPQR_AllAPsCombined_Cleaned |>
   rename("MemberID" = `Member ID`) |> 
   count()
 
-write.csv(VBP_Unduplicated, "./data/output/VBP_Unduplicated.csv")
+# write.csv(VBP_Unduplicated, "./data/output/VBP_Unduplicated.csv")
 ```
 
 ```{r}
 #| label: Modeling Claims Unduplicated
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -1069,14 +1069,14 @@ AMMClaims_Unduplicated <- AMMEligibilityTest_AllEligible |>
   group_by(MemberID) |> 
   count()
 
-write.csv(AMMClaims_Unduplicated, "./data/output/AMMClaims_Unduplicated.csv")
+# write.csv(AMMClaims_Unduplicated, "./data/output/AMMClaims_Unduplicated.csv")
 
 
 ```
 
 ```{r}
 #| label: Modeling Validation Matrix
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -1091,7 +1091,7 @@ Validation_Matrix <-
          "claims" = n.y) |> 
   mutate(Match = if_else((is.na(VBP) | is.na(claims)), "NoMatch", "Match"))
 
-write.csv(Validation_Matrix, "./data/output/ValidationMatrix.csv")
+# write.csv(Validation_Matrix, "./data/output/ValidationMatrix.csv")
 ```
 
 ## Summary
@@ -1119,23 +1119,23 @@ The first block of code, labeled "Modeling VBP Unduplicated," is doing the follo
 1. The dataset *VBPQR_AllAPsCombined_Cleaned* is being grouped by the column "Member ID."
 2. The column "Member ID" is then renamed to "MemberID."
 3. The number of occurrences of each unique "MemberID" is counted and stored in a new dataset called *VBP_Unduplicated*.
-4. There is a commented out line (*write.csv(...)*) that suggests the intention to write the *VBP_Unduplicated* dataset to a CSV file.
+4. There is a commented out line (*# write.csv(...)*) that suggests the intention to # write the *VBP_Unduplicated* dataset to a CSV file.
 
 The second block of code, labeled "Modeling Claims Unduplicated," performs the following actions:
 
 1. The dataset *AMMEligibilityTest_AllEligible* is filtered to exclude any rows where the "MemberID" is equal to "NULL."
 2. The dataset is then grouped by the "MemberID" column.
 3. The number of occurrences of each unique "MemberID" is counted and stored in a new dataset called *AMMClaims_Unduplicated*.
-4. There is a commented out line (*write.csv(...)*) that suggests the intention to write the *AMMClaims_Unduplicated* dataset to a CSV file.
+4. There is a commented out line (*# write.csv(...)*) that suggests the intention to # write the *AMMClaims_Unduplicated* dataset to a CSV file.
 
 The third block of code, labeled "Modeling Validation Matrix," combines the previous two datasets (*VBP_Unduplicated* and *AMMClaims_Unduplicated*) to create a validation matrix:
 
 1. The datasets *VBP_Unduplicated* and *AMMClaims_Unduplicated* are merged based on the common column "MemberID." The resulting merged dataset is stored in *Validation_Matrix*.
 2. The columns *n.x* and *n.y* (which represent the counts from the previous datasets) are renamed to "VBP" and "claims," respectively.
 3. A new column called "Match" is added to the *Validation_Matrix* dataset. The "Match" column is populated with the value "NoMatch" if either the "VBP" or "claims" values are missing (*NA*), and "Match" otherwise.
-4. There is a commented out line (*write.csv(...)*) that suggests the intention to write the *Validation_Matrix* dataset to a CSV file.
+4. There is a commented out line (*# write.csv(...)*) that suggests the intention to # write the *Validation_Matrix* dataset to a CSV file.
 
-In summary, this code takes two datasets (*VBPQR_AllAPsCombined_Cleaned* and *AMMEligibilityTest_AllEligible*), performs data manipulation and aggregation operations on them, and creates a validation matrix (*Validation_Matrix*) to determine matches and mismatches based on the "MemberID" column. The intention is to potentially write the resulting datasets to CSV files for further analysis or storage.
+In summary, this code takes two datasets (*VBPQR_AllAPsCombined_Cleaned* and *AMMEligibilityTest_AllEligible*), performs data manipulation and aggregation operations on them, and creates a validation matrix (*Validation_Matrix*) to determine matches and mismatches based on the "MemberID" column. The intention is to potentially # write the resulting datasets to CSV files for further analysis or storage.
 :::
 
 # Results
@@ -1146,7 +1146,7 @@ In order to conduct the validation test, all records from VBP_Unduplicated are i
 
 ```{r}
 #| label: Compliance Table
-#| eval: true
+#| eval: false
 #| include: false
 #| echo: true 
 #| warning: false
@@ -1165,9 +1165,9 @@ Compliance <-
 
 colnames(Compliance)[6] <- "Gap_Status"
 #####
-write.csv(Compliance, "./data/output/Compliance.csv")
+# write.csv(Compliance, "./data/output/Compliance.csv")
 
-write.csv(Compliance, "C:/Users/RyanK/OneDrive - The NARBHA Institute/Documents - Data Force/Projects/AllianceIntranetSupport/data/Compliance.csv")
+# # write.csv(Compliance, "C:/Users/RyanK/OneDrive - The NARBHA Institute/Documents - Data Force/Projects/AllianceIntranetSupport/data/Compliance.csv")
 ```
 
 ### Validation Matrix Results
@@ -1212,7 +1212,7 @@ We also found that only 7% of the eligible cases found in adjudicated claims wer
 
 ```{r}
 #| label: Chi Squared Test
-#| eval: true
+#| eval: false
 #| include: false
 #| echo: true
 #| warning: false
@@ -1230,16 +1230,14 @@ Comp_ChiSq <- Compliance |>
   # mutate(`0` = as.double(`0`),
   #        `1` = as.double(`1`))
 
-write.csv(Comp_ChiSq, "./data/output/Comp_ChiSq.csv")
+# write.csv(Comp_ChiSq, "./data/output/Comp_ChiSq.csv")
 
 chisq.test(Comp_ChiSq[-1], correct = FALSE)
 ```
 
-The number of Compliant, Non-Valid members was disproportionately larger than the number of Non-Compliant, Non-Valid members. This indicates that the Alliance Providers performance level for AMM may have been artificially inflated and scored too high. 
-
 ```{r}
 #| label: Chi Square Figure
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -1290,17 +1288,13 @@ ChiSquare_Barchart
 
 The process of determining eligible cases for the AMM measurement is very complex. We hope that we were able to adequately describe the process and the nature of the resulting dataset.
 
-After determining the eligible cases, the process of validating that list of members against the VBP Quality Roster is fairly straight forward, and follows an almost identical process to the FUH7 Validation.
+After determining the eligible cases, the process of validating that list of members against the VBP Quality Roster is fairly straight forward, and followed an almost identical process to the FUH7 Validation.
 
-## Analysis Results
-
-The results of the validation process revealed that there was a significant difference between the comparison groups, and that in particular there is a disproportionately large number of Compliant, though Not Valid cases. 
-
-The results indicate that Alliance performance scores for Antidepressant Medication Management may be artificially inflated.
+The evaluation of the aggregated Alliance Provider VBP Quality Rosters identified 1,691 eligible members. However, only 7% of those (131 members) could be validated with an eligible adjudicated claim. The question becomes, "Why are there so few matches?"
 
 ## Conclusions
 
-Our goal is accuracy and transparency. With this in mind, The Alliance should keep a close eye on this measure. With the 1st quarter of data for the 2023 measurement year in the books, it is a concern that there are so few valid cases in the VBP Quality Report. This data will be reported to Health Choice Leadership.
+Our goal is accuracy and transparency. With this in mind, The Alliance should keep a close eye on this measure. With the 1st quarter of data for the 2023 measurement year in the books, it is a concern that there are so few valid cases in the VBP Quality Report. This data will be reported to Health Choice leadership at our quarterly joint operating meeting
 
 The current AMM performance score for the Alliance is 58.43%, or +1.14 percentage points above the mean. We recommend further investigation into provider tools and innovations to improve the overall performance of the network while we continue to assess data validation. 
 
@@ -1308,8 +1302,8 @@ The current AMM performance score for the Alliance is 58.43%, or +1.14 percentag
 
 1.    Internal Alliance Leadership: 06-29-2023
 2.    The Narbha Institute Leadership: 07-03-2023
-3.    Internal Alliance Leadership: 07-05-2023
-3.    Alliance-Health Choice Joint Operating Committee:
+3.    Internal Alliance Leadership: 07-06-2023
+4.    Alliance-Health Choice Joint Operating Committee:
 
 # Appendix
 
@@ -1377,7 +1371,7 @@ In order to create a cross walk that ties the NDC codes from NCQA to the GPI cod
 
 ```{r}
 #| label: CreateRxIdentifierCrosswalk
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true
 #| code-fold: show
@@ -1438,7 +1432,7 @@ My2023NDCtoGPICrosswalk <- merge(
   ) |> 
   na.omit()
 
-write.csv(My2023NDCtoGPICrosswalk, "./data/output/My2023NDCtoGPICrosswalk.csv")
+# write.csv(My2023NDCtoGPICrosswalk, "./data/output/My2023NDCtoGPICrosswalk.csv")
 
 concatenated_values_GPI <- paste0("'",    My2023NDCtoGPICrosswalk$GPI_GenericProductIdentifier, "'", collapse = ", ")
 
@@ -1461,7 +1455,7 @@ The **Validation_Matrix** was transformed and rejoined with **AMMEligibilityTest
 
 ```{r}
 #| label: AMM Member Follow Up List
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true
 #| code-fold: show
@@ -1480,8 +1474,8 @@ MemberFollowUpList <-
         all = TRUE) |>
   drop_na(Match)
 
-write.csv(MemberFollowUpList,"./data/output/AMM_MemberFollowUpList.csv")
-write.csv(MemberFollowUpList, "C:/Users/KGLtd/OneDrive - The NARBHA Institute/Documents - Data Force/Projects/AllianceIntranetSupport/data/output/AMM_MemberFollowUpList.csv")
+# write.csv(MemberFollowUpList,"./data/output/AMM_MemberFollowUpList.csv")
+# write.csv(MemberFollowUpList, "C:/Users/KGLtd/OneDrive - The NARBHA Institute/Documents - Data Force/Projects/AllianceIntranetSupport/data/output/AMM_MemberFollowUpList.csv")
 
 ```
 :::
@@ -1498,7 +1492,7 @@ Some exploratory analyses were conducted on the resulting data from this model. 
 
 ```{r}
 #| label: Eval Label Name
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -1516,7 +1510,7 @@ MemberFollowUpList |>
 
 ```{r}
 #| label: Eval Label Name 2
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -1545,7 +1539,7 @@ MemberFollowUpList |>
 
 ```{r}
 #| label: Eval Date of Service
-#| eval: true
+#| eval: false
 #| include: true
 #| echo: true 
 #| warning: false
@@ -1558,9 +1552,9 @@ MemberFollowUpList |>
   count(month) |>
   ggplot(aes(x = month, y = n)) +
   geom_line() +
-  geom_vline(xintercept = as.Date("2022-10-01"), linetype = "dashed", color = "red") +
+  geom_vline(xintercept = as.Date("2022-10-01"), linetype = "dashed", color = "#520096") +
   annotate("text", x = as.Date("2022-10-01"), y = max(MemberFollowUpList$n), label = "End RBHA Contract", 
-           vjust = -15.0, hjust = -0.025, color = "red") +
+           vjust = -10.0, hjust = -0.025, color = "#520096") +
   scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +
   scale_y_continuous(labels = comma) +
   ylab("Number of Fills") +
@@ -1568,48 +1562,6 @@ MemberFollowUpList |>
   ggtitle("Frequency of Antidepressant Medication Fills over Time") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-```
-
-##### Test Charts
-```{r}
-library(ggplot2)
-library(ggplot2)
-
-# Calculate the counts for each combination of Match and Gap_Status
-counts <- Compliance %>%
-  group_by(Match, Gap_Status) %>%
-  summarize(n = n()) %>%
-  ungroup()
-
-# Set the radius of the circles based on the count values
-counts$radius <- sqrt(counts$n)
-
-# Plot the circles
-ggplot(counts, aes(x = Match, y = Gap_Status, fill = Gap_Status)) +
-  geom_point(shape = 21, size = counts$radius * 0.05, color = "black") +
-  scale_fill_manual(values = c("#b60ef9", "#520096"),
-                    name = "Validation",
-                    labels = c("Compliant", "Non-Compliant")) +
-  labs(title = "VBP Report Member Event Validation",
-       subtitle = "Distinct member validation against adjudicated claims",
-       caption = "*From claims adjudicated through April 27, 2023") +
-  ylab("Gap Status") +
-  xlab("Match") +
-  theme(
-    plot.title = element_text(hjust = 0.5),
-    plot.subtitle = element_text(face = "italic", hjust = 0.5),
-    plot.caption = element_text(face = "bold.italic", hjust = 0, vjust = -1),
-    axis.text = element_blank(),
-    axis.ticks = element_blank(),
-    panel.background = element_blank(),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank()
-  )
-
-
-
-ChiSquare_Barchart
 
 ```
 
