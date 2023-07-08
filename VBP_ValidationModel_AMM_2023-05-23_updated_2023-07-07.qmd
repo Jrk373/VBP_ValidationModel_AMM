@@ -774,29 +774,48 @@ MDDxClaims <- read_csv("./data/MDDxClaims_20230602.csv")
 #| warning: false
 #| error: false
 
-# Load the MDDxClaims data
+# Step 1: Load the MDDxClaims data
 MDDxClaimsTest <- MDDxClaims %>%
   rename(PrimaryId = primaryID)
 
-# Add index numbers
+
+# Step 2: Add a new column "ProjectId_MDD" with random 10-digit numbers
+MDDxClaimsTest <- MDDxClaimsTest %>%
+  mutate(ProjectId_MDD = sample(1000000000:9999999999, nrow(.))) |>
+  filter(!is.na(begDate)) |> 
+  rename("MDDxDate" = begDate)
+
+# Step 2a: Shed a little extra weight
+MDDxClaimsTest <- MDDxClaimsTest %>%
+  select(PrimaryId, MemberID, ProjectId_MDD, MDDxDate, PrimaryDiagnosis)
 
 
-# Step 7: Filter out cases with "Positive Med History"
+# Step 3: Filter out cases with "Positive Med History"
 filtered_table <- PBMClaims_NMHTest %>%
   filter(NMHTestResult == "New Start")
 
 filtered_table <- filtered_table |> 
   rename(PrimaryId = PrimaryId.x)
 
-# Merge PBMClaims_NMHTest and MDDxClaims on PrimaryId, keeping all rows and columns
-PBMClaims_MDDxMerge <- merge(x = filtered_table, y = MDDxClaimsTest, by = "PrimaryId", all = TRUE)
+# Step 4: Merge PBMClaims_NMHTest and MDDxClaims on PrimaryId, keeping all rows and columns
+PBMClaims_MDDxMerge <- merge(x = filtered_table, y = MDDxClaimsTest, by = "PrimaryId", all.x = TRUE)
 
-PBMClaims_MDDxTest <- PBMClaims_MDDxMerge
+# Diverge to counting methodology
 
-# Create a new column called MDDxTestResult and conduct test
-PBMClaims_MDDxTest$MDDxTestResult <- ifelse(abs(as.numeric(as.Date(PBMClaims_MDDxTest$begDate) - as.Date(PBMClaims_MDDxTest$dtefilled))) <= 60, TRUE, FALSE)
+# Step 5: Determine the number of days between IPSDate and NMHTestDate as an absolute value
+PBMClaims_MDDxTest <- PBMClaims_MDDxMerge %>% 
+  mutate(days_between_MDDx = abs(as.numeric(IPSDate - MDDxDate)))
 
-# Select the columns of interest, change name to _MDDXTest
+# Step 6: Determine "New Start" or "Positive Med History" based on days_between
+PBMClaims_MDDxTest <- PBMClaims_MDDxTest %>%
+  mutate(MDDxTestResult = ifelse(days_between_MDDx < 60, "Positive MDDx", "No MDDx")) |>
+  filter(!is.na(MDDxDate))
+
+
+
+
+
+# Step 6: Select the columns of interest, change name to _MDDXTest
 PBMClaims_MDDxTest <- PBMClaims_MDDxTest[, c("PrimaryId", "clientID", "MemberID", "dtefilled", "IPSDTestResult", "NMHTestResult" , "MDDxTestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "AmtPaidFinal")]
 
 # write.csv(PBMClaims_MDDxTest, "./data/output/PBMClaims_MDDxTest.csv")
