@@ -56,6 +56,8 @@ comma_separator_hook <- function(x) {
 
 # Set the inline code hook globally
 knitr::knit_hooks$set(inline = comma_separator_hook)
+
+
 ```
 
 ```{r}
@@ -814,10 +816,6 @@ PBMClaims_MDDxTest <- PBMClaims_MDDxTest %>%
 
 
 
-
-# Step 6: Select the columns of interest, change name to _MDDXTest
-PBMClaims_MDDxTest <- PBMClaims_MDDxTest[, c("PrimaryId", "clientID", "MemberID", "dtefilled", "IPSDTestResult", "NMHTestResult" , "MDDxTestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "AmtPaidFinal")]
-
 # write.csv(PBMClaims_MDDxTest, "./data/output/PBMClaims_MDDxTest.csv")
 
 ```
@@ -890,52 +888,80 @@ GlobalMembers <- GlobalMembers_orig |>
 PBMClaims_CETest1 <- merge(x = PBMClaims_MDDxTest,
               y = GlobalMembers,
               by = "PrimaryId",
-              all = TRUE)
+              all = TRUE) 
 
-# Continuous Enrollment Test (Pre)
+PBMClaims_CETest1 <- PBMClaims_CETest1 |> 
+  filter(MDDxTestResult == "Positive MDDx")
 
-# Calculate the difference in days. If and only if bhhEffectiveDate is earlier than the dtefilled, then return the number of days between the bhhEffectiveDate and the dtefilled
-PBMClaims_CETest1$CEDaysDiff_Pre <- ifelse(PBMClaims_CETest1$bhhEffectiveDate < PBMClaims_CETest1$dtefilled,
-                                   as.integer(difftime(PBMClaims_CETest1$dtefilled, PBMClaims_CETest1$bhhEffectiveDate, units = "days")),
-                                   NA)
+# Pre
 
-# Create the DaysDiff_PreTest column
-PBMClaims_CETest1$CEDaysDiff_PreTest <- PBMClaims_CETest1$CEDaysDiff_Pre > 105
+# Convert the columns to Date format if they are not already in Date format
+PBMClaims_CETest1$IPSDate <- as.Date(PBMClaims_CETest1$IPSDate)
+PBMClaims_CETest1$bhhEffectiveDate <- as.Date(PBMClaims_CETest1$bhhEffectiveDate)
+
+# Calculate the number of days between IPSDate and bhhEffectiveDate
+PBMClaims_CETest1$days_between_CEPre <- as.numeric(PBMClaims_CETest1$IPSDate - PBMClaims_CETest1$bhhEffectiveDate)
+
+# Add a column "CEPreTest" based on the condition
+PBMClaims_CETest1 <- PBMClaims_CETest1 %>%
+  mutate(CEPreTest = ifelse(days_between_CEPre >= 105, "Continuous Prior Enrollment", "No Continuous Prior Enrollment"))
 
 
-# Continuous Enrollment Test (Post)
+# Post
 
-# Calculate the difference in days only if bhhEffectiveDate is before dtefilled
-PBMClaims_CETest1$CEDaysDiff_Post <- ifelse(PBMClaims_CETest1$bhhEffectiveDate < PBMClaims_CETest1$dtefilled,
-                                   as.integer(difftime(PBMClaims_CETest1$dtefilled, PBMClaims_CETest1$bhhEffectiveDate, units = "days")),
-                                   NA)
+# Convert the columns to Date format if they are not already in Date format
+PBMClaims_CETest1$IPSDate <- as.Date(PBMClaims_CETest1$IPSDate)
+PBMClaims_CETest1$disenrollmentDate <- as.Date(PBMClaims_CETest1$disenrollmentDate)
 
-# Get today's date
-today <- Sys.Date()
+# Calculate the number of days between IPSDate and bhhEffectiveDate
+PBMClaims_CETest1$days_between_CEPost <- as.numeric(PBMClaims_CETest1$disenrollmentDate - PBMClaims_CETest1$IPSDate)
 
-# If disenrollment date is null (meaning still enrolled), then return the number of days between dtefilled and today. If the disenrollmentDate is not null (Meaning the person is disenrolled) then calculate the number of days between the dtefilled and the disenrollment date.
+# Add a column "CEPostTest" based on the conditions
+PBMClaims_CETest1 <- PBMClaims_CETest1 %>%
+  mutate(CEPostTest = ifelse(days_between_CEPost >= 231 | is.na(disenrollmentDate), "Continuous Post Prescription Enrollment", "No Continuous Enrollment"))
 
-PBMClaims_CETest1$CEDaysDiff_Post <- ifelse(is.na(PBMClaims_CETest1$disenrollmentDate),
-                                   as.integer(difftime(today, PBMClaims_CETest1$dtefilled, units = "days")),
-                                   ifelse(PBMClaims_CETest1$disenrollmentDate > PBMClaims_CETest1$dtefilled,
-                                          as.integer(difftime(PBMClaims_CETest1$disenrollmentDate, PBMClaims_CETest1$dtefilled, units = "days")),
-                                          NA))
-
-# Create the DaysDiff_PostTest column
-PBMClaims_CETest1$CEDaysDiff_PostTest <- PBMClaims_CETest1$CEDaysDiff_Post > 231
-
-# Conduct test to see if both pre and post conditions are met
-# Create new column "CETestResult"
-PBMClaims_CETest1$CETestResult <- ifelse(PBMClaims_CETest1$CEDaysDiff_PostTest & PBMClaims_CETest1$CEDaysDiff_PreTest, TRUE, FALSE)
-
-# Select Choice variables:
-PBMClaims_CE_Test <- PBMClaims_CETest1[, c("PrimaryId", "clientID", "MemberID", "dtefilled", "IPSDTestResult", "NMHTestResult", "MDDxTestResult", "CETestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "CEDaysDiff_Pre", "CEDaysDiff_Post", "AmtPaidFinal")]
-
-# Sort the data
-PBMClaims_CE_Test <- PBMClaims_CE_Test %>%
-  arrange(desc(PrimaryId), desc(dtefilled), IPSDTestResult)
+# Add a column "CETestResult" based on the conditions
+PBMClaims_CETest1 <- PBMClaims_CETest1 %>%
+  mutate(CETestResult = ifelse(CEPreTest == "Continuous Prior Enrollment" & CEPostTest == "Continuous Post Prescription Enrollment",
+                               "Continuous Enrollment", "No Continuous Enrollment"))
 
 # write.csv(PBMClaims_CE_Test, "./data/output/PBMClaims_CE_Test.csv")
+
+PBMClaims_AMMEligible <- PBMClaims_CETest1 |> 
+  filter(CETestResult == "Continuous Enrollment")
+
+PBMClaims_AMMEligible <- PBMClaims_AMMEligible |> 
+  select("PrimaryId",
+         "clientID",
+         "MemberID",
+         "ahcccsId",
+         "ProjectId_IPSD.x",
+         "IPSDate",
+         "genericnme",
+         "ProjectId_IPSD.y",
+         "NMHTestDate",
+         "comparison_result_NMHTestDate",
+         "days_between_NMH",
+         "NMHTestResult",
+         "ProjectId_MDD",
+         "MDDxDate",
+         "PrimaryDiagnosis",
+         "days_between_MDDx",
+         "MDDxTestResult",
+         "bhhEffectiveDate",
+         "disenrollmentDate",
+         "days_between_CEPre",
+         "CEPreTest",
+         "days_between_CEPost",
+         "CEPostTest",
+         "CETestResult",
+         "bhhShortname",
+         "sex",
+         "resCountyName",
+         "zipCode") |> 
+  filter(bhhShortname %in% c("CPIH", "TGC", "SBH", "CBI", "WYGC", "SHG", "MMHC", "LCBHC"))
+
+# write.csv(PBMClaims_AMMEligible, "./data/output/PBMClaims_AMMEligible.csv")
 
 ```
 
