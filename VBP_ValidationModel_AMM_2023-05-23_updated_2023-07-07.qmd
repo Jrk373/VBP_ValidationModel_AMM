@@ -889,10 +889,19 @@ PBMClaims_CETest1 <- merge(x = PBMClaims_MDDxTest,
               y = GlobalMembers,
               by = "PrimaryId",
               all = TRUE) 
+<<<<<<< HEAD
+=======
 
 PBMClaims_CETest1 <- PBMClaims_CETest1 |> 
   filter(MDDxTestResult == "Positive MDDx")
 
+
+>>>>>>> fa034041d79458933ae59b4312d6dec190c13595
+
+PBMClaims_CETest1 <- PBMClaims_CETest1 |> 
+  filter(MDDxTestResult == "Positive MDDx")
+
+<<<<<<< HEAD
 # Pre
 
 # Convert the columns to Date format if they are not already in Date format
@@ -924,6 +933,8 @@ PBMClaims_CETest1 <- PBMClaims_CETest1 %>%
 PBMClaims_CETest1 <- PBMClaims_CETest1 %>%
   mutate(CETestResult = ifelse(CEPreTest == "Continuous Prior Enrollment" & CEPostTest == "Continuous Post Prescription Enrollment",
                                "Continuous Enrollment", "No Continuous Enrollment"))
+=======
+>>>>>>> fa034041d79458933ae59b4312d6dec190c13595
 
 # write.csv(PBMClaims_CE_Test, "./data/output/PBMClaims_CE_Test.csv")
 
