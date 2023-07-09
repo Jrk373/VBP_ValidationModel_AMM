@@ -62,7 +62,7 @@ knitr::knit_hooks$set(inline = comma_separator_hook)
 
 ```{r}
 #| label: Demo Data
-#| eval: true 
+#| eval: false
 #| include: false
 #| echo: false
 #| warning: false
@@ -113,7 +113,7 @@ Hello,
 
 This project compares Report Data with Real Data by comparing the Health Choice Value Based Purchasing Quality Roster (VBPQR)[^1] for Antidepressant Medication Management (AMM) with Health Choice adjudicated claims. This project is similar in many ways to the VBP Validation Model for Follow Up after Hospitalization (FUH)[^2].
 
-The guidelines for antidepressant medication are far more nuanced[^3]. Nonetheless we have endeavored to define the eligible population using adjudicated claims, measuring our Real Data against the VBP Quality Report Data.
+The guidelines for antidepressant medication are far more nuanced[^3]. Nonetheless we have endeavored to define the eligible population using claims that have been processed and paid by Health Choice, and then measuring our Real Data against the VBP Quality Report Data.
 
 The results were surprising! Our research into eligible adjudicated claims identified a similar number of cases to the VBP Quality Roster; however, only 7% of the VBP QR members were validated against adjudicated claims. 
 
@@ -153,7 +153,7 @@ So, in January 2023 we developed a validation model for the NCQA measure for Fol
 
 That brings us to the new measurement year, January 2023 to December 2023. In this project the VBP Validation Model is going to be applied to the Antidepressant Medication Management (AMM) HEDIS My2023[^4] performance measure.
 
-This model compares **Report Data** from the VBP Quality Roster with **Real Data** from adjudicated claims.
+This model compares **Report Data** from the VBP Quality Roster with **Real Data** from adjudicated claims, or claims that have been processed and paid.
 
 The model will answer the following questions:
 
@@ -162,8 +162,8 @@ The model will answer the following questions:
 
 The business objectives are twofold:
 
--   Build an eligibility model for the AMM eligible population
--   Validate the VBP Quality Report using adjudicated claims for eligible cases
+-   Build an eligibility model for the AMM eligible population.
+-   Validate the VBP Quality Report using adjudicated claims for eligible cases.
 
 [^4]: NCQA. (2023). *HEDIS Measures and Technical Resources*. https://www.ncqa.org/hedis/measures/
 
@@ -189,7 +189,7 @@ This manuscript is written using Brisk-DM. Brisk-DM is a structure for doing dat
 
 ## The current state of things
 
-At the time of this writing, The Alliance has assessed the first 3 months of VBP Quality Rosters for the 2023 measurement year. Our application of the VBP Validation Model for FUH7 in June 2023 revealed a similar pattern to the 2022 measurement year where we found that performance scores for FUH were underrated[^7].
+At the time of this study, The Alliance has assessed the first 3 months of VBP Quality Rosters for the 2023 measurement year. Our application of the VBP Validation Model for FUH7 in June 2023 revealed a similar pattern to the 2022 measurement year where we found that performance scores for FUH were underrated[^7].
 
 The results for FUH are under further investigation while we develop this model for AMM. The recurrence of this issue invites some concern. Learning from last year's results, we will carefully monitor FUH through the data, and track performance throughout the year, reporting our findings in real time. 
 
@@ -197,7 +197,7 @@ The results for FUH are under further investigation while we develop this model 
 
 ## Hablemos de dato (Let's talk about the data)
 
-This data model is simple in concept, but complex in design. The model compares Report Data from the HC VBP Quality Roster with Real Data from Health Choice adjudicated claims.
+This data model is simple in concept, but complex in design. The model compares Report Data from the HC VBP Quality Roster with Real Data from Health Choice claims.
 
 ### What are the data sources?
 
@@ -330,7 +330,7 @@ WHERE
 
 ```{r}
 #| label: IPSDTest
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| code-fold: show
@@ -368,25 +368,15 @@ PBMClaims_NMHTest$IPSDTestResult <- ifelse(
 
 #### In lay terms
 
-Let me explain the provided R code in simple terms:
+The provided code is a combination of SQL and R code for data processing and analysis. Here's a layman's summary:
 
-The code is performing some operations on a dataset called "PBMClaims" which contains information about claims. Here's what each part of the code does:
+1. The SQL code retrieves data from a database table called "PBM.dbo.HCICPharmacyClaimSummary" and joins it with the "GlobalMembers.dbo.ClientIdPlus" table using the client ID. It selects various columns related to pharmacy claim details within a specified date range, and filters for members aged 18 or older and specific GPI numbers.
 
-1. Importing the raw claims data: The code reads a CSV file ("DataRaw_PBMClaims_2023-05-31.csv") that contains the raw claims data.
+2. The R code imports raw claims data from a CSV file, converts the date columns to the correct format, and saves the processed data as a new CSV file.
 
-2. Converting numeric variable to date: One column in the dataset, called "dtefilled," is in a numeric format representing dates. The code converts this column to a proper date format (year-month-day).
+3. The R code then creates a copy of the claims data and adds a new column called "IPSDTestResult" based on date conditions. If the "dtefilled" date falls within a specific range, the result is set to "TRUE"; otherwise, it is set to "FALSE". The modified data is saved as another CSV file.
 
-3. Converting character variable to date: Another column, called "AsOfDate," is in a character format representing dates. The code converts this column to a date format as well.
-
-4. Creating a new dataset: A new dataset called "PBMClaims_NMHTest" is created, which is a copy of the original "PBMClaims" dataset.
-
-5. Checking and converting the 'dtefilled' column to the correct date format: The code checks if the "dtefilled" column in the new dataset is already in the correct date format. If not, it converts it to the correct format (year-month-day).
-
-6. Defining start and end dates for IPSDTestResult: Two dates, "ip_start_date" and "ip_end_date," are defined. These dates represent the start and end of a specific period called IPSD (Individual Prescription Supply Duration).
-
-7. Creating the IPSDTestResult column: Based on the conditions of the "dtefilled" column falling within the IPSD period, a new column called "IPSDTestResult" is created in the new dataset. If a claim falls within the IPSD period, the corresponding value in the "IPSDTestResult" column is set to "TRUE"; otherwise, it is set to "FALSE".
-
-In simple terms, the code is taking a dataset of claims, converting date columns to the proper format, and then identifying claims that fall within a specific period called IPSD. The result is a new column indicating whether each claim is within the IPSD period or not (ChatGPT, personal communication, July, 2023).
+The overall purpose of the code is to process and analyze pharmacy claims data, specifically focusing on members who meet certain age and GPI number criteria, and identifying if their claims fall within a specified date range for an IPSD test. (ChatGPT, personal communication, July, 2023).
 
 :::
 
@@ -398,7 +388,7 @@ In simple terms, the code is taking a dataset of claims, converting date columns
 
 **The Test for Negative Medication History** determines if an individual is a new recipient of an antidepressant medication. An individual passes this test if they have **not** had a prescription for an antidepressant medication within 105 days **prior to** the IPSD.
 
-**Be patient.** If you are replicating this project, this part of the program takes about 20 minutes to run. If you think about what it is doing, it is comparing every row of claims (\~147,000 rows) against the IPSD Intake Period range, and for all of the positive returns, comparing each one to each of the the original 147,000 rows for the NMH test.
+**Be patient.** If you are replicating this project, this part of the program takes a minute to run. If you think about what it is doing, it is comparing every row of claims (\~147,000 rows) against the IPSD Intake Period range, and for all of the positive returns, comparing each one to each of the the original 147,000 rows for the NMH test.
 
 Think about trying to guess the first 2 numbers on the bike lock, multiplied by 147,000. Anyway, it's a lot. Go grab some coffee.
 
@@ -429,115 +419,50 @@ Be patient. This part of the program takes about 20 minutes to run. If you think
 #| code-fold: show
 #| warning: false
 #| error: false
-
-# Initialize NMHTestResult column with empty values
-PBMClaims_NMHTest$NMHTestResult <- ""
-
-# Loop through each row of the data frame
-for (i in 1:nrow(PBMClaims_NMHTest)) {
-  # Get the current ClientID, GpiNumber, and IPSDTest date
-  current_client <- PBMClaims_NMHTest$clientID[i]
-  current_gpi <- PBMClaims_NMHTest$GpiNumber[i]
-  ipsd_test_date <- PBMClaims_NMHTest$dtefilled[i]
-  
-  # Find any matching observation with the same ClientID, GpiNumber, and a date less than 105 days before the IPSDTest date
-  matching_observation <- PBMClaims_NMHTest$clientID[
-    PBMClaims_NMHTest$clientID == current_client 
-    & PBMClaims_NMHTest$GpiNumber == current_gpi 
-    
-## This is the problematic bit right here. Less than or greater than?
-    & PBMClaims_NMHTest$dtefilled < ipsd_test_date - 105]
-  
-  # If there is no matching observation, update the NMHTestResult value for the current row
-  if (length(matching_observation) != 0) {
-    PBMClaims_NMHTest$NMHTestResult[i] <- "TRUE"
-  } else {
-    # If there is no matching observation, update the NMHTestResult value for the current row as "FALSE"
-    PBMClaims_NMHTest$NMHTestResult[i] <- "FALSE"
-  }
-}
-
-
- write.csv(PBMClaims_NMHTest, "./data/output/PBMClaims_NMHTest_TestA.csv")
-
-```
-
-```{r}
-#| label: NMHTest testing
-#| eval: false
-#| include: true
-#| echo: true 
-#| code-fold: show
-#| warning: false
-#| error: false
-
-# Prompt:
-
-# Load required packages
-library(dplyr)
-library(lubridate)
-
-# Read the data from a file (assuming it's in a CSV format)
-claims <- read.csv("./data/output/PBMClaims_IPSDTest.csv")
-
-# Step 1: Select the desired columns
-selected_columns <- claims %>%
-  select(PrimaryId, GpiNumber, IPSDTestResult, dtefilled)
-
-# Step 2: Create copies of the table
-original <- selected_columns
-test <- selected_columns
-
-# Step 3: Join the two tables based on the given conditions
-joined_table <- original %>%
-  filter(IPSDTestResult) %>%
-  inner_join(test, by = c("PrimaryId", "GpiNumber")) %>%
-  select(-5)  # Drop the 5th column
-
-# Step 4: Compare dtefilled.x with dtefilled.y and return the corresponding result
-PBMClaims_NMHTest <- joined_table %>%
-  rename(IPSDate = dtefilled.x, NMHTestDate = dtefilled.y)
-
-PBMClaims_NMHTest <- PBMClaims_NMHTest %>%
-  mutate(IPSDate = as.Date(IPSDate),
-         NMHTestDate = as.Date(NMHTestDate),
-         comparison_result = case_when(
-           IPSDate < NMHTestDate ~ "IPSD is prior to test date",
-           NMHTestDate < IPSDate ~ "IPSD is after test date",
-           TRUE ~ NA_character_
-         ))
-
-# Step 5: Determine the number of days between IPSDate and NMHTestDate as an absolute value
-PBMClaims_NMHTest <- PBMClaims_NMHTest %>% 
-  mutate(days_between = abs(as.numeric(IPSDate - NMHTestDate)))
-
-# Step 6: Determine "New Start" or "Positive Med History" based on days_between
-PBMClaims_NMHTest <- PBMClaims_NMHTest %>%
-  mutate(NMHTestResult = ifelse(days_between > 105, "New Start", "Positive Med History"))
-
-# write to csv
-
- write.csv(PBMClaims_NMHTest, "./data/output/PBMClaims_NMHTest_TestB.csv")
+# 
+# # Initialize NMHTestResult column with empty values
+# PBMClaims_NMHTest$NMHTestResult <- ""
+# 
+# # Loop through each row of the data frame
+# for (i in 1:nrow(PBMClaims_NMHTest)) {
+#   # Get the current ClientID, GpiNumber, and IPSDTest date
+#   current_client <- PBMClaims_NMHTest$clientID[i]
+#   current_gpi <- PBMClaims_NMHTest$GpiNumber[i]
+#   ipsd_test_date <- PBMClaims_NMHTest$dtefilled[i]
+#   
+#   # Find any matching observation with the same ClientID, GpiNumber, and a date less than 105 days before the IPSDTest date
+#   matching_observation <- PBMClaims_NMHTest$clientID[
+#     PBMClaims_NMHTest$clientID == current_client 
+#     & PBMClaims_NMHTest$GpiNumber == current_gpi 
+#     
+# ## This is the problematic bit right here. Less than or greater than?
+#     & PBMClaims_NMHTest$dtefilled < ipsd_test_date - 105]
+#   
+#   # If there is no matching observation, update the NMHTestResult value for the current row
+#   if (length(matching_observation) != 0) {
+#     PBMClaims_NMHTest$NMHTestResult[i] <- "TRUE"
+#   } else {
+#     # If there is no matching observation, update the NMHTestResult value for the current row as "FALSE"
+#     PBMClaims_NMHTest$NMHTestResult[i] <- "FALSE"
+#   }
+# }
+# 
+# 
+#  write.csv(PBMClaims_NMHTest, "./data/output/PBMClaims_NMHTest_TestA.csv")
 
 ```
 
 ```{r}
 #| label: NMHTest testing 2
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| code-fold: show
 #| warning: false
 #| error: false
 
-# Prompt:
-
-# Load required packages
-library(dplyr)
-library(lubridate)
-
 # Read the data from a file (assuming it's in a CSV format)
-claims <- read.csv("./data/output/PBMClaims_IPSDTest.csv")
+claims <- PBMClaims_NMHTest
 
 # Step 1: Select the desired columns and add ProjectId column
 selected_columns <- claims %>%
@@ -550,11 +475,12 @@ test <- selected_columns
 
 # Step 3: Join the two tables based on the given conditions
 joined_table <- original %>%
+  mutate(IPSDTestResult = as.logical(IPSDTestResult)) %>%
   filter(IPSDTestResult) %>%
   inner_join(test, by = c("clientID", "genericnme"))
 
 joined_table <- joined_table |> 
-  select("clientID", "PrimaryId.x", "ProjectId.x", "ProjectId.y", "genericnme", "dtefilled.x", "dtefilled")
+  select("clientID", "PrimaryId.x", "ProjectId.x", "ProjectId.y", "genericnme", "dtefilled.x", "dtefilled.y")
 
 # Step 4: Compare dtefilled.x with dtefilled.y and return the corresponding result
 joined_table <- joined_table %>%
@@ -582,34 +508,31 @@ joined_table <- joined_table %>%
 joined_table <- joined_table %>%
   mutate(NMHTestResult = ifelse(days_between > 105, "New Start", "Positive Med History"))
 
- write.csv(joined_table, "./data/output/PBMClaims_NMHTest_TestB.csv")
+# write.csv(joined_table, "./data/output/PBMClaims_NMHTest.csv")
 
 PBMClaims_NMHTest <- joined_table
-
-# Step 7: Filter out cases with "Positive Med History"
-# filtered_table <- joined_table %>%
-#   filter(NMHTestResult != "Positive Med History")
 
 ```
 #### In lay terms
 
-The code is performing an analysis on a dataset called "PBMClaims_NMHTest" that contains information about claims. Here's what each part of the code does:
+The code performs various operations on a dataset called "claims" (assumed to be in CSV format) related to pharmacy claims data with specific columns. Here's a layman's summary of the code:
 
-1. Initializing the NMHTestResult column: The code adds a new column called "NMHTestResult" to the dataset and initializes it with empty values.
+1. Select desired columns from the claims data and add a new column called "ProjectId" with randomly generated 10-digit numbers.
 
-2. Looping through each row of the dataset: The code goes through each row of the dataset one by one.
+2. Create copies of the table named "original" and "test" based on the selected columns.
 
-3. Extracting relevant information: For each row, the code extracts the ClientID, GpiNumber, and IPSDTest date.
+3. Join the "original" and "test" tables based on specific conditions related to client ID and generic name.
 
-4. Searching for matching observations: The code looks for any other rows in the dataset that have the same ClientID and GpiNumber but a date that is less than 105 days before the IPSDTest date of the current row.
+4. Compare the "IPSDate" (date from the original table) with the "NMHTestDate" (date from the test table). Identify whether the IPSDate is before or after the NMHTestDate.
 
-5. Checking for a matching observation: If a matching observation is found, it means that there is a claim for the same ClientID and GpiNumber within the specified time frame. In this case, the "NMHTestResult" value for the current row is set to "TRUE".
+5. Calculate the number of days between the IPSDate and NMHTestDate as an absolute value.
 
-6. Handling no matching observation: If no matching observation is found, it means that there is no claim for the same ClientID and GpiNumber within the specified time frame. In this case, the "NMHTestResult" value for the current row is set to "FALSE".
+6. Determine the "NMHTestResult" based on the number of days between IPSDate and NMHTestDate. If the number of days is greater than 105, the result is "New Start"; otherwise, it is "Positive Med History".
 
-In simple terms, the code is going through each claim in the dataset and checking if there was a previous claim for the same client and medication within a specific time frame (105 days before the current claim). If such a claim exists, the "NMHTestResult" column is marked as "TRUE" for that claim. Otherwise, it is marked as "FALSE".
+7. Save the resulting joined table as a CSV file called "PBMClaims_NMHTest.csv".
 
-*Generated by ChatGPT
+The overall purpose of the code seems to be to process and analyze pharmacy claims data, compare dates, and classify the results based on the number of days between certain dates (ChatGPT, personal communication, July, 2023).
+
 :::
 
 ::: callout-tip
@@ -754,7 +677,7 @@ AND CASE WHEN v.Code IS NOT NULL THEN 'True' ELSE 'False' END = 'True';
 
 ```{r}
 #| label: MDDxClaimsImport
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -770,7 +693,7 @@ MDDxClaims <- read_csv("./data/MDDxClaims_20230602.csv")
 
 ```{r}
 #| label: MDDxClaims1
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -800,7 +723,10 @@ filtered_table <- filtered_table |>
   rename(PrimaryId = PrimaryId.x)
 
 # Step 4: Merge PBMClaims_NMHTest and MDDxClaims on PrimaryId, keeping all rows and columns
-PBMClaims_MDDxMerge <- merge(x = filtered_table, y = MDDxClaimsTest, by = "PrimaryId", all.x = TRUE)
+PBMClaims_MDDxMerge <- merge(x = filtered_table, 
+                             y = MDDxClaimsTest, 
+                             by = "PrimaryId", 
+                             all.x = TRUE)
 
 # Diverge to counting methodology
 
@@ -822,17 +748,26 @@ PBMClaims_MDDxTest <- PBMClaims_MDDxTest %>%
 
 #### In lay terms
 
-1. The code is loading the data from the "MDDxClaims" dataset and assigning it to a new variable called "MDDxClaimsTest". It also renames the column "primaryID" to "PrimaryId" in the new dataset.
+The code performs the following operations:
 
-2. The code merges two datasets, "PBMClaims_NMHTest" and "MDDxClaimsTest", based on the common column "PrimaryId". The result is stored in a new dataset called "PBMClaims_MDDxMerge". It includes all rows and columns from both datasets.
+1. Import the "ValueSetListMy2023.csv" file, which contains a list of diagnosis codes.
+2. Create a list called "MDDxList" that stores the diagnosis codes from the "ValueSetListMy2023" dataset.
+3. Concatenate the diagnosis codes from "ValueSetListMy2023" into a single string, formatted for SQL query.
+4. Query the Health Choice data warehouse for eligible MDDx claims within a specified date range. The query retrieves distinct information such as primaryID, MemberID, begDate, PrimaryDiagnosis, Dx1, Dx2, Dx3, ..., Dx12, and MatchFound. The query joins the claims data with the temporary table "#ValueSetListMy2023" using the diagnosis codes to find matches.
+5. Save the results of the MDDx claims query as a CSV file named "MDDxClaims_dateslug.csv".
+6. Import the "MDDxClaims_20230602.csv" file, which contains the MDDx claims data.
+7. Prepare the MDDxClaims data by renaming the "primaryID" column to "PrimaryId".
+8. Add a new column called "ProjectId_MDD" with randomly generated 10-digit numbers.
+9. Filter out cases with missing "begDate" values.
+10. Rename the "begDate" column to "MDDxDate" and select only the relevant columns.
+11. Filter the "PBMClaims_NMHTest" table for cases with "New Start" in the "NMHTestResult" column.
+12. Rename the "PrimaryId.x" column to "PrimaryId" in the "filtered_table" dataset.
+13. Merge the "PBMClaims_NMHTest" and "MDDxClaimsTest" datasets based on the "PrimaryId" column, keeping all rows from "PBMClaims_NMHTest".
+14. Calculate the number of days between the "IPSDate" and "MDDxDate" as an absolute value.
+15. Determine the "MDDxTestResult" based on the number of days between the "IPSDate" and "MDDxDate". If the number of days is less than 60, the result is "Positive MDDx"; otherwise, it is "No MDDx".
+16. Filter out cases with missing "MDDxDate" values.
+17. Save the resulting MDDx test claims as a CSV file named "PBMClaims_MDDxTest.csv" (ChatGPT, personal communication, July, 2023).
 
-3. The code creates a copy of the merged dataset and assigns it to a new variable called "PBMClaims_MDDxTest".
-
-4. A new column called "MDDxTestResult" is added to the "PBMClaims_MDDxTest" dataset. The column is populated based on a test condition. If the absolute difference between the "begDate" and "dtefilled" columns is less than or equal to 60 (in terms of days), the value in "MDDxTestResult" is set to TRUE; otherwise, it is set to FALSE.
-
-5. The code selects specific columns of interest from the "PBMClaims_MDDxTest" dataset and creates a new dataset called "PBMClaims_MDDxTest" with the selected columns. The column names are appended with "_MDDXTest".
-
-In summary, this code loads and manipulates two datasets, "PBMClaims_NMHTest" and "MDDxClaims", and combines them based on a common column. It then performs a test using date values and creates a new dataset with selected columns for further analysis or reporting.
 :::
 
 ::: callout-tip
@@ -870,7 +805,7 @@ Compare the Index Prescription Start Date against the member enrollment roster d
 
 ```{r}
 #| label: Continuous Enrollment
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -889,19 +824,15 @@ PBMClaims_CETest1 <- merge(x = PBMClaims_MDDxTest,
               y = GlobalMembers,
               by = "PrimaryId",
               all = TRUE) 
-<<<<<<< HEAD
-=======
+
 
 PBMClaims_CETest1 <- PBMClaims_CETest1 |> 
   filter(MDDxTestResult == "Positive MDDx")
 
 
->>>>>>> fa034041d79458933ae59b4312d6dec190c13595
-
 PBMClaims_CETest1 <- PBMClaims_CETest1 |> 
   filter(MDDxTestResult == "Positive MDDx")
 
-<<<<<<< HEAD
 # Pre
 
 # Convert the columns to Date format if they are not already in Date format
@@ -933,10 +864,8 @@ PBMClaims_CETest1 <- PBMClaims_CETest1 %>%
 PBMClaims_CETest1 <- PBMClaims_CETest1 %>%
   mutate(CETestResult = ifelse(CEPreTest == "Continuous Prior Enrollment" & CEPostTest == "Continuous Post Prescription Enrollment",
                                "Continuous Enrollment", "No Continuous Enrollment"))
-=======
->>>>>>> fa034041d79458933ae59b4312d6dec190c13595
 
-# write.csv(PBMClaims_CE_Test, "./data/output/PBMClaims_CE_Test.csv")
+# write.csv(PBMClaims_CETest1, "./data/output/PBMClaims_CETest.csv")
 
 PBMClaims_AMMEligible <- PBMClaims_CETest1 |> 
   filter(CETestResult == "Continuous Enrollment")
@@ -945,14 +874,13 @@ PBMClaims_AMMEligible <- PBMClaims_AMMEligible |>
   select("PrimaryId",
          "clientID",
          "MemberID",
-         "ahcccsId",
-         "ProjectId_IPSD.x",
-         "IPSDate",
-         "genericnme",
-         "ProjectId_IPSD.y",
+         "ahcccsId", 
+         "ProjectId.x", 
+         "IPSDate", 
+         "genericnme", 
+         "ProjectId.y",
          "NMHTestDate",
-         "comparison_result_NMHTestDate",
-         "days_between_NMH",
+         "days_between",
          "NMHTestResult",
          "ProjectId_MDD",
          "MDDxDate",
@@ -968,8 +896,9 @@ PBMClaims_AMMEligible <- PBMClaims_AMMEligible |>
          "CETestResult",
          "bhhShortname",
          "sex",
-         "resCountyName",
-         "zipCode") |> 
+         "dob",
+         "zipCode",
+         "resCountyName")|> 
   filter(bhhShortname %in% c("CPIH", "TGC", "SBH", "CBI", "WYGC", "SHG", "MMHC", "LCBHC"))
 
 # write.csv(PBMClaims_AMMEligible, "./data/output/PBMClaims_AMMEligible.csv")
@@ -978,28 +907,31 @@ PBMClaims_AMMEligible <- PBMClaims_AMMEligible |>
 
 #### In lay terms
 
-Here's an explanation of the provided code:
+The code performs the following operations:
 
-1. Import the original global members roster from an Excel file and store it in the variable `GlobalMembers_orig`.
-2. Create a working copy of the global members roster and rename the column named "x" to "PrimaryId". Store the modified copy in the variable `GlobalMembers`.
-3. Merge the `PBMClaims_MDDxTest` table with the `GlobalMembers` data based on the "PrimaryId" column, keeping all rows from both tables. The merged result is stored in the variable `PBMClaims_CETest1`.
-4. Perform a continuous enrollment test for the "Pre" period:
-   - Calculate the difference in days between the "bhhEffectiveDate" and the "dtefilled" columns, but only if the "bhhEffectiveDate" is earlier than the "dtefilled" date. Store the result in the column named "CEDaysDiff_Pre".
-   - Create a new column named "CEDaysDiff_PreTest" that indicates whether the "CEDaysDiff_Pre" is greater than 105.
-5. Perform a continuous enrollment test for the "Post" period:
-   - Calculate the difference in days between the "bhhEffectiveDate" and the "dtefilled" columns, but only if the "bhhEffectiveDate" is earlier than the "dtefilled" date. Store the result in the column named "CEDaysDiff_Post".
-   - If the "disenrollmentDate" is null (meaning the person is still enrolled), calculate the difference in days between the "dtefilled" date and today's date. If the "disenrollmentDate" is not null (meaning the person is disenrolled), calculate the difference in days between the "dtefilled" date and the "disenrollmentDate". Store the result in the column named "CEDaysDiff_Post".
-   - Create a new column named "CEDaysDiff_PostTest" that indicates whether the "CEDaysDiff_Post" is greater than 231.
-6. Conduct a test to check if both the pre and post conditions are met. Create a new column named "CETestResult" that is set to TRUE if both "CEDaysDiff_PostTest" and "CEDaysDiff_PreTest" are TRUE, and FALSE otherwise.
-7. Select specific choice variables from the `PBMClaims_CETest1` table and store the result in the variable `PBMClaims_CE_Test`.
-8. Sort the data in `PBMClaims_CE_Test` in descending order based on the "PrimaryId", "dtefilled", and "IPSDTestResult" columns.
-
-In summary, the code performs tests related to continuous enrollment for pre and post periods based on various date columns. It creates new columns to store the results of these tests and selects specific variables of interest for further analysis. The data is then sorted based on certain columns.
+1. Import the original global members roster from an Excel file.
+2. Create a working copy of the global members roster and rename the "x" column to "PrimaryId".
+3. Merge the "PBMClaims_MDDxTest" table with the global members data using the "PrimaryId" column.
+4. Filter the resulting table to keep only rows where the "MDDxTestResult" is "Positive MDDx".
+5. Convert the "IPSDate" and "bhhEffectiveDate" columns to Date format.
+6. Calculate the number of days between "IPSDate" and "bhhEffectiveDate".
+7. Add a new column called "CEPreTest" based on the condition: if the number of days is greater than or equal to 105, the value is "Continuous Prior Enrollment"; otherwise, it is "No Continuous Prior Enrollment".
+8. Convert the "IPSDate" and "disenrollmentDate" columns to Date format.
+9. Calculate the number of days between "IPSDate" and "disenrollmentDate".
+10. Add a new column called "CEPostTest" based on the conditions: if the number of days is greater than or equal to 231 or if the "disenrollmentDate" is NA, the value is "Continuous Post Prescription Enrollment"; otherwise, it is "No Continuous Enrollment".
+11. Add a new column called "CETestResult" based on the conditions: if "CEPreTest" is "Continuous Prior Enrollment" and "CEPostTest" is "Continuous Post Prescription Enrollment", the value is "Continuous Enrollment"; otherwise, it is "No Continuous Enrollment".
+12. Save the resulting table as a CSV file named "PBMClaims_CETest.csv".
+13. Filter the "PBMClaims_CETest" table to keep only rows where "CETestResult" is "Continuous Enrollment".
+14. Select specific columns from the filtered table.
+15. Filter the resulting table based on the values in the "bhhShortname" column, keeping only rows with values "CPIH", "TGC", "SBH", "CBI", "WYGC", "SHG", "MMHC", or "LCBHC".
+16. Save the filtered table as a CSV file named "PBMClaims_AMMEligible.csv" (ChatGPT, personal communication, July, 2023).
 
 :::
 
 
 ### AMM Eligibility Model, Check!
+
+This is the **Real Data**
 
 We have now determined that there is:
 
@@ -1009,44 +941,6 @@ We have now determined that there is:
 4.  A valid period of enrollment.
 
 The resulting dataset presents a list of members with indicators for each of the respective tests. A person with a prescription fill that met each of the conditions is included, and will be compared with the VBP Quality Roster Data.
-
-::: panel-tabset
-```{r}
-#| label: AMM Eligibility Test
-#| eval: false
-#| include: true
-#| echo: true 
-#| warning: false
-#| error: false
-# Conduct the AMM Eligibility Test
-
-# Convert the variables to logical if needed
-PBMClaims_CE_Test$IPSDTestResult <- as.logical(PBMClaims_CE_Test$IPSDTestResult)
-PBMClaims_CE_Test$NMHTestResult <- as.logical(PBMClaims_CE_Test$NMHTestResult)
-PBMClaims_CE_Test$MDDxTestResult <- as.logical(PBMClaims_CE_Test$MDDxTestResult)
-PBMClaims_CE_Test$CETestResult <- as.logical(PBMClaims_CE_Test$CETestResult)
-
-# Create the new column "AMMEligibilityTest"
-PBMClaims_CE_Test$AMMEligibilityTestResult <- with(PBMClaims_CE_Test, IPSDTestResult & NMHTestResult & MDDxTestResult & CETestResult)
-
-# Select Choice variables:
-AMMEligibilityTest <- PBMClaims_CE_Test[, c("PrimaryId", "clientID", "MemberID", "dtefilled", "AMMEligibilityTestResult", "IPSDTestResult", "NMHTestResult", "MDDxTestResult", "CETestResult", "begDate", "PrimaryDiagnosis", "GpiNumber", "LabelName", "preslstnme", "decimalqty", "dayssupply", "CEDaysDiff_Pre", "CEDaysDiff_Post", "AmtPaidFinal")]
-
-# Sort the data
-AMMEligibilityTest <- AMMEligibilityTest %>%
-  arrange(desc(PrimaryId), desc(dtefilled), AMMEligibilityTestResult)
-
-# write.csv(AMMEligibilityTest, "./data/output/AMMEligibilityTest.csv")
-
-# write.csv(AMMEligibilityTest, "./data/output/AMMEligibilityTest_Copy.csv")
- 
-# Filter AMMEligibilityTest for only those cases that are eligible
-AMMEligibilityTest_AllEligible <- AMMEligibilityTest |> filter(AMMEligibilityTestResult == TRUE)
-
-# write.csv(AMMEligibilityTest_AllEligible, "./data/output/AMMEligibilityTest_AllEligible.csv")
-
-```
-:::
 
 ## Value-based Purchasing Quality Reports (VBP QR)
 
@@ -1078,7 +972,7 @@ The *SubMeasureID* variable was filtered for this study to only include the *AMM
 
 ```{r}
 #| label: Import VBPQR data
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -1114,7 +1008,7 @@ DataRaw_VBPQR_AllAPsCombined <- rbind(
   vbp_tgc
 )
 
-# # write to csv
+# write to csv
 # date of file = date of VBP QR report
 # write.csv(DataRaw_VBPQR_AllAPsCombined, "./data/output/2023-05-31_DataRaw_VBPQR_AllAPsCombined.csv")
 ```
@@ -1123,7 +1017,7 @@ DataRaw_VBPQR_AllAPsCombined <- rbind(
 
 ```{r}
 #| label: Wrangle VBPQR data
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -1152,7 +1046,7 @@ VBPQR_AllAPsCombined_Cleaned$`SubMeasure ID` <- substr(VBPQR_AllAPsCombined_Clea
 
 ```{r}
 #| label: Wrangle VBPQR data 2
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -1241,7 +1135,7 @@ The data is assessed for cases where a VBP MemberID is validated against a Claim
 
 ```{r}
 #| label: Modeling VBP Unduplicated
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -1257,13 +1151,13 @@ VBP_Unduplicated <- VBPQR_AllAPsCombined_Cleaned |>
 
 ```{r}
 #| label: Modeling Claims Unduplicated
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
 #| error: false
 
-AMMClaims_Unduplicated <- AMMEligibilityTest_AllEligible |> 
+AMMClaims_Unduplicated <- PBMClaims_AMMEligible |> 
   filter(MemberID != "NULL") |> 
   group_by(MemberID) |> 
   count()
@@ -1275,7 +1169,7 @@ AMMClaims_Unduplicated <- AMMEligibilityTest_AllEligible |>
 
 ```{r}
 #| label: Modeling Validation Matrix
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
@@ -1345,7 +1239,7 @@ In order to conduct the validation test, all records from VBP_Unduplicated are i
 
 ```{r}
 #| label: Compliance Table
-#| eval: false
+#| eval: true
 #| include: false
 #| echo: true 
 #| warning: false
@@ -1363,10 +1257,11 @@ Compliance <-
         all.y = TRUE)
 
 colnames(Compliance)[6] <- "Gap_Status"
-#####
+
+# # write.csv
 # write.csv(Compliance, "./data/output/Compliance.csv")
 
-# # write.csv(Compliance, "C:/Users/RyanK/OneDrive - The NARBHA Institute/Documents - Data Force/Projects/AllianceIntranetSupport/data/Compliance.csv")
+# write.csv(Compliance, "C:/Users/RyanK/OneDrive - The NARBHA Institute/Documents - Data Force/Projects/AllianceIntranetSupport/data/Compliance.csv")
 ```
 
 ### Validation Matrix Results
@@ -1377,41 +1272,46 @@ The Validation Matrix dataset is a list of all distinct member IDs in the contex
 
 The cases when a member identified on the Health Choice VBP Quality Roster is also identified in adjudicated claims were as follows:
 
--   Valid ("Match"): `r Validation_Matrix |> filter(Match == "Match") |> nrow()` of the `r nrow(VBP_Unduplicated)` VBP members were validated against an eligible AMM Claims member. 
--   Not-Valid ("No Match"): `r ((nrow(VBP_Unduplicated)) - (Validation_Matrix |> filter(Match == "Match") |> nrow()))`
- were not matched.
+-   Valid ("Match"): `r Validation_Matrix |> filter(Match == "Match") |> nrow()` of the `r nrow(VBP_Unduplicated)` members on the VBP Quality Roster were also found among eligible Health Choice pharmacy claims. 
+-   Not-Valid ("No Match"): `r ((nrow(VBP_Unduplicated)) - (Validation_Matrix |> filter(Match == "Match") |> nrow()))` members on the VBP Quality Roster were not found among eligibile Health Choice pharmacy claims.
 
 #### Compliance
 
 The compliance status of cases on the Health Choice VBP Report were as follows.
 
--   Non-Compliant: `r Compliance |> filter(Gap_Status == "OPEN") |> nrow()` 
+-   Non-Compliant: `r Compliance |> filter(Gap_Status == "OPEN") |> nrow()` cases were not found to have the expected duration of antidepressant medication treatment.
 
--   Compliant: `r Compliance |> filter(Gap_Status == "CLOSED") |> nrow()` 
+-   Compliant: `r Compliance |> filter(Gap_Status == "CLOSED") |> nrow()` cases were found to have the expected duration of antidepressant medication treatment.
+
 
 #### Validation by Compliance:
 
 The matrix that results from combining the validation status and the compliance status of a given member provides the following results.
 
--   Matched, NonCompliant (MNC): `r Compliance |> filter(Gap_Status== "OPEN" & Match == "Match") |> nrow()` 
+-   Matched, NonCompliant (MNC): `r Compliance |> filter(Gap_Status== "OPEN" & Match == "Match") |> nrow()`
+  -   A member that is found in both the VBP Quality Roster AND found in Health Choice claims, who DID NOT receive the expected duration of antidepressant medication treatment
 
 -   Matched, Compliant (MC): `r Compliance |> filter(Gap_Status== "CLOSED" & Match == "Match") |> nrow()`
+  -   A member that is found in both the VBP Quality Roster AND found in Health Choice claims, who DID indeed receive the expected duration of antidepressant medication treatment
 
 -   NonMatched, NonCompliant (NMNC): `r Compliance |> filter(Gap_Status== "OPEN" & Match == "NoMatch") |> nrow()`
+  -   A member that is found in the VBP Quality Roster, BUT NOT found in Health Choice claims, who DID NOT receive the expected duration of antidepressant medication treatment
 
 -   NonMatched, Compliant (NMC): `r Compliance |> filter(Gap_Status== "CLOSED" & Match == "NoMatch") |> nrow()`
+  -   A member that is found in the VBP Quality Roster, BUT NOT found in Health Choice claims, who DID indeed receive the expected duration of antidepressant medication treatment
 
 ## Analysis
 
 The Pearson's Chi-Square test can be used to confirm if there is a significant difference between the expected result and the observed result in this comparison. 
-Chi Square test was run at alpha = .05. There was not a statistical significance between the groups (*X*^2 (1, *N*=1691) = 30.64, *p*>.05), indicating that the groups in the Validation Matrix are not disproportionately impacted. Sampling error is consistent throughout the four groupings.
 
-We also found that only 7% of the eligible cases found in adjudicated claims were identified by the VBP Quality Report.
+Chi Square test was run at alpha = .05. There was a statistically significance between the groups (*X*^2 (1, *N*=1691) = 90.633, *p*>.001), indicating that the groups in the Validation Matrix are disproportionately impacted. 
+
+We also found that only about 16% of the cases that were identified by the VBP Quality roster were also found in adjudicated claims. In other words, only 16% of the VBP Quality Roster cases were valid.
 
 
 ```{r}
 #| label: Chi Squared Test
-#| eval: false
+#| eval: true
 #| include: false
 #| echo: true
 #| warning: false
@@ -1436,13 +1336,11 @@ chisq.test(Comp_ChiSq[-1], correct = FALSE)
 
 ```{r}
 #| label: Chi Square Figure
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
 #| error: false
-
-library(ggplot2)
 
 ChiSquare_Barchart <- Compliance |> 
   select(Match, Gap_Status) |> 
@@ -1453,19 +1351,19 @@ ChiSquare_Barchart <- Compliance |>
   geom_col() +
   scale_fill_manual(values = c(Match = "#b60ef9", NoMatch = "#520096"),
                     name = "Validation",
-                    labels = c("Valid", "Not-Valid")) +
+                    labels = c("VBP and Claims", "VBP and No Claims")) +
   labs(title = "VBP Report Member Event Validation",
-       subtitle = "Distinct member validation against adjudicated claims",
+       subtitle = "VBP Quality Roster validation against adjudicated claims",
        caption = "*From claims adjudicated through April 27, 2023") +
   ylab("Number of Distinct Members") +
-  xlab("AMM2 Compliance Status") +
+  xlab("Compliance to expected AMM treatment duration (115 days)") +
   scale_x_discrete(labels = c("Compliant", "Non-Compliant")) +
   theme(
     axis.title.y = element_text(vjust = 2),
     plot.subtitle = element_text(face = "italic"),
     plot.caption = element_text(face = "bold.italic", hjust = 0, vjust = -1)
   ) +
-  annotate("text", x = 1, y = 125, label = "p < .001", color = "#b60ef9", fontface = "bold")
+  annotate("text", x = 1, y = 800, label = "p < .001", color = "white", fontface = "bold")
 
 # Save the plot as a PNG file with a transparent background
 ggsave("./data/output/chisquared_transparentbackground.png", width = 7, height = 5, dpi = 300, bg = "transparent")
@@ -1654,7 +1552,7 @@ The **Validation_Matrix** was transformed and rejoined with **AMMEligibilityTest
 
 ```{r}
 #| label: AMM Member Follow Up List
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true
 #| code-fold: show
@@ -1668,7 +1566,7 @@ The **Validation_Matrix** was transformed and rejoined with **AMMEligibilityTest
 # Rejoin the matched and non-matched MemberIDs to their claims data
 MemberFollowUpList <- 
    merge(x = Validation_Matrix,
-        y = AMMEligibilityTest,
+        y = PBMClaims_AMMEligible,
         by = "MemberID",
         all = TRUE) |>
   drop_na(Match)
@@ -1691,15 +1589,15 @@ Some exploratory analyses were conducted on the resulting data from this model. 
 
 ```{r}
 #| label: Eval Label Name
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
 #| error: false
 
 MemberFollowUpList |> 
-  filter(!is.na(LabelName)) |>
-  group_by(LabelName) |> 
+  filter(!is.na(genericnme)) |>
+  group_by(genericnme) |> 
   summarise(percent = n() / nrow(MemberFollowUpList) * 100) |>
   arrange(desc(percent)) |>
   head(10) |>
@@ -1709,19 +1607,19 @@ MemberFollowUpList |>
 
 ```{r}
 #| label: Eval Label Name 2
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
 #| error: false
 
 MemberFollowUpList |>
-  filter(!is.na(LabelName)) |>
-  group_by(LabelName) |>
+  filter(!is.na(genericnme)) |>
+  group_by(genericnme) |>
   summarise(percent = n() / nrow(MemberFollowUpList) * 100) |>
   filter(percent >= 1) |>
-  arrange(LabelName) |>
-  ggplot(aes(x = percent, y = reorder(LabelName, percent))) +
+  arrange(genericnme) |>
+  ggplot(aes(x = percent, y = reorder(genericnme, percent))) +
   geom_bar(stat = "identity", fill = "steelblue") +
   ylab(NULL) +
   xlab("Percentage of Total Prescription Fills") +
@@ -1738,15 +1636,15 @@ MemberFollowUpList |>
 
 ```{r}
 #| label: Eval Date of Service
-#| eval: false
+#| eval: true
 #| include: true
 #| echo: true 
 #| warning: false
 #| error: false
 
 MemberFollowUpList |>
-  mutate(dtefilled = as.Date(dtefilled)) |>
-  mutate(month = floor_date(dtefilled, "month")) |>
+  mutate(IPSDate = as.Date(IPSDate)) |>
+  mutate(month = floor_date(IPSDate, "month")) |>
   filter(month >= as.Date("2022-04-01") & month <= as.Date("2023-03-31")) |>
   count(month) |>
   ggplot(aes(x = month, y = n)) +
