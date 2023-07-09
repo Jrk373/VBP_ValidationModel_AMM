@@ -1361,7 +1361,7 @@ ChiSquare_Barchart <- Compliance |>
        caption = "*From claims adjudicated through April 27, 2023") +
   ylab("Number of Distinct Members") +
   xlab("Compliance to expected AMM treatment duration (115 days)") +
-  scale_x_discrete(labels = c("Compliant", "Non-Compliant")) +
+  scale_x_discrete(labels = c("115 days Tx (Compliant)", " Less than 115 days (Non-Compliant)")) +
   theme(
     axis.title.y = element_text(vjust = 2),
     plot.subtitle = element_text(face = "italic"),
@@ -1388,13 +1388,15 @@ The process of determining eligible cases for the AMM measurement is very comple
 
 After determining the eligible cases, the process of validating that list of members against the VBP Quality Roster is fairly straight forward, and followed an almost identical process to the FUH7 Validation.
 
-The evaluation of the aggregated Alliance Provider VBP Quality Rosters identified 1,691 eligible members. However, only 7% of those (131 members) could be validated with an eligible adjudicated claim. The question becomes, "Why are there so few matches?"
+The evaluation of the aggregated Alliance Provider VBP Quality Rosters identified 1,691 eligible members. However, only 16% of those (281 members) could be validated by matching the VBP QR record with an eligible claim.
 
 ## Conclusions
 
-Our goal is accuracy and transparency. With this in mind, The Alliance should keep a close eye on this measure. With the 1st quarter of data for the 2023 measurement year in the books, it is a concern that there are so few valid cases in the VBP Quality Report. This data will be reported to Health Choice leadership at our quarterly joint operating meeting
+Our goal is accuracy and transparency. With this in mind, The Alliance should keep a close eye on this measure. With the 1st quarter of data for the 2023 measurement year in the books, it is a concern that there are so few valid cases in the VBP Quality Report. This data will be reported to Health Choice leadership at our quarterly joint operating meeting.
 
-The current AMM performance score for the Alliance is 58.43%, or +1.14 percentage points above the mean. We recommend further investigation into provider tools and innovations to improve the overall performance of the network while we continue to assess data validation. 
+The difference between the validation groups was statistically significant. It is also easily visualized. The implications of this data are considerable. The current AMM performance score for the Alliance is 58.43%, or +1.14 percentage points above the mean. When that score is adjusted to only include cases that can be validated by matching with an eligible claim (the light purple), that performance scores rises to 83.99%, or +26.70 percentage points.
+
+This is significant impact on the performance measurement of Alliance Providers. We recommend further investigation into the data and processes used by Health Choice. In the meantime, it is also recommended to research provider tools and innovations to improve the overall performance of the network while we continue to assess data validation. 
 
 # Quality Reviews
 
@@ -1669,3 +1671,50 @@ MemberFollowUpList |>
 
 ```
 :::
+### Record of the R Studio Environment
+
+```{r}
+# Install 'knitr' package if not already installed
+if (!require(knitr)) {
+  install.packages("knitr")
+}
+
+library(knitr)
+
+# Get a list of all objects in the environment
+objects <- ls()
+
+# Initialize an empty list to store object details
+object_details <- list()
+
+# Iterate over each object
+for (object_name in objects) {
+  # Get the object
+  object <- get(object_name)
+  
+  # Get the number of observations and variables
+  num_observations <- if (is.data.frame(object)) nrow(object) else NA
+  num_variables <- if (is.data.frame(object)) ncol(object) else NA
+  
+  # Check if observations are NA
+  if (!is.na(num_observations)) {
+    # Create a data frame with object details
+    object_info <- data.frame(Object = object_name,
+                              Observations = num_observations,
+                              Variables = num_variables)
+    
+    # Add the object details to the list
+    object_details[[object_name]] <- object_info
+  }
+}
+
+# Combine all object details into a single data frame
+all_object_details <- do.call(rbind, object_details)
+
+# Format the table using kable
+formatted_table <- kable(all_object_details, format = "markdown", align = "c")
+
+# Print the formatted table
+print(formatted_table)
+
+```
