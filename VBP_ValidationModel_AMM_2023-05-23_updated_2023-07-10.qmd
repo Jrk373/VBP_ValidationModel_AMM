@@ -115,7 +115,7 @@ This project compares Report Data with Real Data by comparing the Health Choice 
 
 The guidelines for antidepressant medication are far more nuanced[^3]. Nonetheless we have endeavored to define the eligible population using claims that have been processed and paid by Health Choice, and then measuring our Real Data against the VBP Quality Report Data.
 
-The results were surprising! Our research into eligible adjudicated claims identified a similar number of cases to the VBP Quality Roster; however, only 7% of the VBP QR members were validated against adjudicated claims. 
+The results were surprising! Our research into eligible adjudicated claims identified a similar number of cases to the VBP Quality Roster; however, only 16% of the VBP QR members were validated against adjudicated claims. 
 
 We hope you enjoy reading this data story. We are always looking for new collaborators, so please reach out and share your ideas.
 
@@ -383,7 +383,6 @@ The provided code is a combination of SQL and R code for data processing and ana
 3. The R code then creates a copy of the claims data and adds a new column called "IPSDTestResult" based on date conditions. If the "dtefilled" date falls within a specific range, the result is set to "TRUE"; otherwise, it is set to "FALSE". The modified data is saved as another CSV file.
 
 The overall purpose of the code is to process and analyze pharmacy claims data, specifically focusing on members who meet certain age and GPI number criteria, and identifying if their claims fall within a specified date range for an IPSD test. (ChatGPT, personal communication, July, 2023).
-
 :::
 
 ### Test for Major Depressive Disorder
@@ -623,9 +622,19 @@ The R code performs the following operations:
 11. Filter out rows with missing "MDDxDate" values from the merged data.
 
 Overall, the code retrieves MDDx claims data, performs data transformations and comparisons, and filters the data based on specific conditions (ChatGPT, personal communication, July, 2023).
-
 :::
 
+::: callout-tip
+
+## Fantastico!
+
+Wow! I can't believe that we actually pulled that off!
+
+Now we have our confirmation of IPSD and MDDx.
+
+***Two down, two to go. Awesome!***
+
+:::
 
 ### Test for Negative Medication History (NMH)
 
@@ -769,18 +778,6 @@ The overall purpose of the code seems to be to process and analyze pharmacy clai
 
 :::
 
-::: callout-tip
-
-## Fantastico!
-
-Wow! I can't believe that we actually pulled that off!
-
-Now we have our confirmation of IPSD and NMH.
-
-***Two down, two to go. Awesome!***
-
-:::
-
 
 ::: callout-tip
 
@@ -789,8 +786,8 @@ Now we have our confirmation of IPSD and NMH.
 We have now determined that there is:
 
 1.  A valid Index Prescription Start Date (IPSD)
-2.  A Negative Medication History (NMH)
-3.  A valid service for Major Depressive Disorder (MDDx)
+2.  A valid service for Major Depressive Disorder (MDDx)
+3.  A Negative Medication History (NMH)
 :::
 
 ### Test for Continuous Enrollment
@@ -1446,31 +1443,6 @@ This is significant impact on the performance measurement of Alliance Providers.
 
 # Appendix
 
-## Analysis output files
-
-This project yields many tables of data along the way and places them in the "output" folder. The following is a table outlining the contents of that folder.
-
-|#| File Name | Description | Variables | Observations |
-|:-|:--|:-----|:-:|:-:|
-|1.| PBMClaims | The raw data claims from the PBM database | 20 | 196,520 |
-|2.| PBMClaims_NMHTest | PBMClaims + results from the IPSD and NMH tests | 22 | 196,520 |
-|3.| MDDxClaims | The raw data claims from the claims database | 17 | 265,000 |
-|4.| PBMClaims_MDDxTest | PBMClaims_NMHTest + results from the MDDx Test | 15 | 1,866,503 |
-|5.| PBMClaims_CE_Test | PBMClaims_MDDxTest + results from the CE Test | 18 | 2,206,190 |
-|6.| AMMElligibilityTest | PBMClaims_CE_Test + the final Elligibility test | 19 | 2,206,190 |
-|7.| AMMEligibilityTest_AllEligible | AMMEligibilityTest filtered for only eligibible cases | 19 | 23,993 |
-|8.| 2023-05-31_DataRaw_VBPQR_AllAPsCombined | The raw aggregated VBP QR data | 9 | 4,424 |
-|9.| VBPQualityRoster | The aggregated and cleaned VBP QR data | 10 | 4,319 |
-|10.| VBPQualityRoster_AMM | The VBPQualityRoster filtered for only AMM | 10 | 1,691 |
-|11.| VBP_Validation | The VBPQualityRoster filtered to only include Member ID | 1 | 1,691 |
-|12.| VBP_Unduplicated | An unduplicated list of members found on the VBP quality Roster for AMM | 2 | 1,691 |
-|13.| AMMClaims_Unduplicated | An unduplicated list of members with eligible claims for the AMM memasure | 2 | 1,758 |
-|14.| Validation Matrix | All unduplicated VBP and AMMClaims, matched on MemberID where possible | 4 | 3,326 |
-|15.| Compliance | The validation Matrix, only including validated members, recombined with VBPQR data for compliance status | 13 | 1,691 |
-|16.| Comp_ChiSq | A 2 x 2 matrix used for the Chi Square test | 3 | 2 |
-|17.| My2023NDCtoGPICrosswalk | The NDC to GP Crosswalk | 5 | 1,104 |
-|18.| AMM MemberFollowUpList | The list of people from the VALdation Martix, with thier matching indicators, recombined with PBM Claims data | 22 | 925,419 |
-
 ## All Alliance Performance Measures
 
 ![All Alliance Performance (Kivela, June 2023)](./images/2023-06-13_Tab_AllProvPerformance.png)[^9]
@@ -1711,7 +1683,7 @@ MemberFollowUpList |>
 
 ```
 :::
-### Record of the R Studio Environment
+### Record of objects referenced in the workflow
 
 ```{r}
 # Install 'knitr' package if not already installed
@@ -1756,5 +1728,7 @@ formatted_table <- kable(all_object_details, format = "markdown", align = "c")
 
 # Print the formatted table
 print(formatted_table)
+
+
 
 ```
