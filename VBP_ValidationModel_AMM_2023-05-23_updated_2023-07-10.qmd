@@ -1299,6 +1299,8 @@ colnames(Compliance)[6] <- "Gap_Status"
 
 # write.csv
 # write.csv(Compliance, "./data/output/Compliance.csv")
+
+# write.csv(Compliance, "./data/output/VBPQR_withValidationMatrix.csv")
 ```
 
 ### Validation Matrix Results
@@ -1589,6 +1591,15 @@ MemberFollowUpList <-
 # Do not write, too big, 3.9 million
 # write.csv(MemberFollowUpList,"./data/output/AMM_MemberFollowUpList.csv")
 
+MemberFollowUpList_TGC <- 
+   merge(x = Validation_Matrix,
+        y = PBMClaims_AMMEligible,
+        by = "MemberID",
+        all = TRUE) |>
+  drop_na(Match) |> 
+  filter(bhhShortname == "TGC")
+
+# write.csv(MemberFollowUpList_TGC,"./data/output/AMM_MemberFollowUpList_TGC.csv")
 ```
 :::
 

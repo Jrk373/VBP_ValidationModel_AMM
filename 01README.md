@@ -9,4 +9,8 @@ With: Jennie McMillian, LPC, and Victoria Tewa, LPC
 
 This is the Read Me file for the VBP Validation model for AntiDepressant Medication Management (AMM).
 
-This model is used to validate thrid party vender measurement of VBP measures, in this case, AMM.
+This model is used to validate third party vender measurement of VBP measures, in this case, AMM.
+
+A large part of this research, and one of its key products is AMM eligibility model
+
+The result of the project is an assessment of the eligible population for the AMM measure, and a comparison obetween the eligible population determined by claims and that reported by the VBP Quality Roster.
