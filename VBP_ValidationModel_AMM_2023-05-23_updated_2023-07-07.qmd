@@ -1,5 +1,5 @@
 ---
-title: "NCQA My HEDIS 2023 Validation Model"
+title: "Validation Model, NCQA My HEDIS 2023"
 subtitle: "Antidepressant Medication Management"
 author: 
   name: "John Ryan Kivela, MA"
@@ -287,7 +287,7 @@ We extract claims from the *PBM database* at the Health Choice data warehouse fo
 #| warning: false
 #| error: false
 
-# Declare Date Range
+# Declare Date Range for NMH and IPSD range
 Declare @start as date = '01-16-2022'
 Declare @end as date = '04-30-2023'
 
@@ -1274,7 +1274,7 @@ The Validation Matrix dataset is a list of all distinct member IDs in the contex
 The cases when a member identified on the Health Choice VBP Quality Roster is also identified in adjudicated claims were as follows:
 
 -   Valid ("Match"): `r Validation_Matrix |> filter(Match == "Match") |> nrow()` of the `r nrow(VBP_Unduplicated)` members on the VBP Quality Roster were also found among eligible Health Choice pharmacy claims. 
--   Not-Valid ("No Match"): `r ((nrow(VBP_Unduplicated)) - (Validation_Matrix |> filter(Match == "Match") |> nrow()))` members on the VBP Quality Roster were not found among eligibile Health Choice pharmacy claims.
+-   Not-Valid ("No Match"): `r ((nrow(VBP_Unduplicated)) - (Validation_Matrix |> filter(Match == "Match") |> nrow()))` of the `r nrow(VBP_Unduplicated)` members on the VBP Quality Roster were not found among eligibile Health Choice pharmacy claims.
 
 #### Compliance
 
@@ -1287,7 +1287,7 @@ The compliance status of cases on the Health Choice VBP Report were as follows.
 
 #### Validation by Compliance:
 
-The matrix that results from combining the validation status and the compliance status of a given member provides the following results.
+The matrix that results from combining the validation status and the compliance status of a given member provides the following results. Compliance status is provided by the VBP Quality Roster. The Alliance has not created a model for the assessment of compliance, yet.
 
 -   Matched, NonCompliant (MNC): `r Compliance |> filter(Gap_Status== "OPEN" & Match == "Match") |> nrow()`
     -   A member that is found in both the VBP Quality Roster AND found in Health Choice claims, who DID NOT receive the expected duration of antidepressant medication treatment
