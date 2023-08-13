@@ -1,0 +1,261 @@
+---
+title: "Validation Model, NCQA My HEDIS 2023"
+subtitle: "Antidepressant Medication Management"
+author: 
+  name: "John Ryan Kivela, MA"
+  email: "Ryan.Kivela@narbha.org"
+  affiliation: "The Alliance ACO"
+date: today
+date-format: long
+format:
+  html:
+    theme: pulse
+    embed-resources: true
+    toc: true
+    toc-depth: 6
+    code-fold: true
+    footnotes-hover: true
+---
+
+```{r}
+#| label: Setup
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+## Load Libraries
+library(tidyverse)
+library(readxl)
+library(kableExtra)
+library(gt)
+library(scales)
+library(utils)
+library(lubridate)
+library(RODBC)
+library(DBI)
+library(odbc)
+library(dbplyr)
+
+# Set up ODBC Connection
+QRPTP01 <- DBI::dbConnect(odbc::odbc(),"AllianceData")
+
+
+# QRPTP01 <- dbConnect("AllianceData", 
+#                           uid = "john.kivela@azblue.com", 
+#                           pwd = "F@reverGr33n02")
+
+# Create table for inline code
+InLineCode <- data.frame(
+  ReportDate = "04-27-2023",
+  MeasurementYear = "01-01-2023 to 12-31-2023",
+  ClaimsAdjudicatedThrough = "02-28-2023",
+  HEDISVersion = "My 2023",
+  IntakePeriod = "05-01-2022 to 04-30-2023",
+  NegativeMedicationHistory = "01-16-222 to 01-15-2023",
+    IPSDstart_date = as.Date("2022-05-01"),
+    IPSDend_date = as.Date("2023-04-30"),
+    NMHstart_date = as.Date("2022-01-16"),
+    NMHend_date = as.Date("2023-01-15")
+)
+
+# Define custom inline code hook for comma separators
+comma_separator_hook <- function(x) {
+  formatted <- format(x, big.mark = ",")
+  knitr::asis_output(formatted)
+}
+
+# Set the inline code hook globally
+knitr::knit_hooks$set(inline = comma_separator_hook)
+```
+
+# Welcome *(Bien Venido)*
+
+Hello,
+
+This project compares Report Data with Real Data by comparing the Health Choice Value Based Purchasing Quality Roster (VBPQR)[^1] for Antidepressant Medication Management (AMM) with Health Choice adjudicated claims. This project is similar in many ways to the VBP Validation Model for Follow Up after Hospitalization (FUH)[^2].
+
+The guidelines for antidepressant medication are far more nuanced[^3]. Nonetheless we have endeavored to define the eligible population using claims that have been processed and paid by Health Choice, and then measuring our Real Data against the VBP Quality Report Data.
+
+The results were surprising! Our research into eligible adjudicated claims identified a similar number of cases to the VBP Quality Roster; however, only 16% of the VBP QR members were validated against adjudicated claims. 
+
+We hope you enjoy reading this data story. We are always looking for new collaborators, so please reach out and share your ideas.
+
+Sincerely,
+
+Ryan
+
+[^1]: Health Choice Arizona. (2023). *Value Based Purchasing Quality Roster*
+
+[^2]: Kivela, J.R. (2023). Value Based Purchasing Data Validation Model. *The Northern Arizona Regional Behavioral Health Alliance*.
+
+[^3]: NCQA. (2023). *HEDIS and Performance Measurement*. https://www.ncqa.org/hedis/
+
+![The Alliance NCQA HEDIS My2023 Eligibility Model for AMM](./images/AMMEligibilityModel_transparentbackground.png)
+
+## The thing about measuring VBP
+
+So, there we were in the first months of the Alliance ACO business, and EVERY provider was concerned that the Value Based Purchasing Quality Roster was inaccurate. Our providers were concerned that their performance scores were underrated, not giving them the credit they deserved.
+
+The Alliance wants its providers to be their best selves and to be recognized. Lack of confidence in the scoring mechanism crowds out enthusiasm and damages commitment to improvement.
+
+So, in January 2023 we developed a validation model for the NCQA measure for Follow Up after Hospitalization (FUH).
+
+::: callout-tip
+
+## The VBP Validation Model FUH7 (2023), Key Takeaways:
+
+-   Created a validated data model that can be used to identify eligible member events for FUH7
+-   Core logic can be used to develop models for other HEDIS/NCQA measures
+-   Research affirmed providers were underrated for the 2022 measurement year
+-   Providers deserved a higher score by about 4 percentage points
+:::
+
+### So what's next?
+
+That brings us to the new measurement year, January 2023 to December 2023. In this project the VBP Validation Model is going to be applied to the Antidepressant Medication Management (AMM) HEDIS My2023[^4] performance measure.
+
+This model compares **Report Data** from the VBP Quality Roster with **Real Data** from adjudicated claims, or claims that have been processed and paid.
+
+The model will answer the following questions:
+
+-   Do the results of the Value Based Purchasing Quality Roster (VBPQR) accurately reflect actual adjudicated claims?
+-   Are the performance scores of Alliance Providers accurate and reliable?
+
+The business objectives are twofold:
+
+-   Build an eligibility model for the AMM eligible population.
+-   Validate the VBP Quality Report using adjudicated claims for eligible cases.
+
+[^4]: NCQA. (2023). *HEDIS Measures and Technical Resources*. https://www.ncqa.org/hedis/measures/
+
+## Why invest in this research?
+
+Inaccurate measurement of VBP performance leads to an invalid assessment of the Alliance Providers' delivery of services to their patients.
+
+Alliance providers were underrated on Follow Up after Hospitalization (FUH7) by at least 4 percentage points for the 2022 measurement year[^5]. With the constantly increasing emphasis on payment for quality of care, even small differences in measurement impact overall performance ratings.
+
+![Alliance Provider performance scores were underated (red blocks) by at least 4 percentage points in 2022](./images/Fig_sup_Compliance.png)
+
+Underrating provider performance frustrates leadership and dampens the spirits of the clinical teams as they do this very difficult work.
+
+Accurate measurement offers a better opportunity to identify patients in need, maximize performance incentive, and support provider morale.
+
+[^5]: Kivela, J.R. (2023). Value Based Purchasing Data Validation Model. *The Northern Arizona Regional Behavioral Health Alliance*.
+
+# Setting up the experiment
+
+This manuscript is written using Brisk-DM. Brisk-DM is a structure for doing data science that is based on CRISP-DM[^6], but tailored for executives and business leads. Brisk-DM uses an approachable communication style that is easily understandable to professionals in the workplace.
+
+[^6]: CRISP-DM help overview. (August 17, 2021). https://www.ibm.com/docs/en/spss-modeler/saas?topic=dm-crisp-help-overview.
+
+## The current state of things
+
+At the time of this study, The Alliance has assessed the first 3 months of VBP Quality Rosters for the 2023 measurement year. Our application of the VBP Validation Model for FUH7 in June 2023 revealed a similar pattern to the 2022 measurement year where we found that performance scores for FUH were underrated[^7].
+
+The results for FUH are under further investigation while we develop this model for AMM. The recurrence of this issue invites some concern. Learning from last year's results, we will carefully monitor FUH through the data, and track performance throughout the year, reporting our findings in real time. 
+
+[^7]: Kivela, J.R. (June, 2023). Value Based Purchasing Report. *The Northern Arizona Regional Behavioral Health Alliance*.
+
+## Hablemos de dato (Let's talk about the data)
+
+This data model is simple in concept, but complex in design. The model compares Report Data from the HC VBP Quality Roster with Real Data from Health Choice claims.
+
+### What are the data sources?
+
+ 
+|VBP Quality Roster | Adjudicated Claims |
+|--|--|
+| Health Choice receives this data from third party vendor, Cotivity.| A dataset of adjudicated claims queried directly from the HCA data warehouse.|            
+| An excel workbook containing a roster of the members deemed eligible for VBP HEDIS NCQA measures including compliance status. | Records are gathered from the Claims and PBM databases, respectively. |
+|  The Alliance receives individual rosters for each Alliance Provider.| Claims are extracted for all eligible service codes for the measurement year. |
+
+### Is the data we use reliable?
+
+| VBP Quality Roster | Adjudicated Claims |
+|--|--|
+| The outstanding question with the VBPQR is if the underlying data from the third party vendor, Cotivity, is accurate. | Claims data is of the highest quality as it is compiled and reviewed extensively by Health Choice for its own business purposes. |
+| The report quality itself is very high as it is compiled by Health Choice Business Intelligence staff. | The quality of this data is also reviewed by state and federal regulation entities, like AZ Health Care Cost Containment System (AHCCCS). |
+| The underlying data is what is under investigation. |
+
+## The AMM Eligibility Model
+
+We now embark upon building a dataset of eligible claims for the AMM measure. This process will be significantly more complicated than our previous model for FUH. The description of an eligible member event is very nuanced for AMM.
+
+![ ](./images/AMMEligibilityModel_transparentbackground.png)
+
+### An eligible member event is defined as follows:
+
+-   The individual is an adult, aged 18 or older, **and**
+-   A prescription was filled for an eligible antidepressant medication within the "Intake Period" ***(Index Prescription Start Date (IPSD))***, **and**
+-   No other prescriptions were filled for eligible antidepressant medications within 105 days earlier than the IPSD ***(Test for Negative Medication History (NMH))***, **and**
+-   The individual had a service for at least one of the eligible Major Depressive Disorders ***(Test for Major Depressive Disorder (MDDx))*** within 60 days (-60 days before, or +60 days after), **and**
+-   The individual had continuous enrollment with Health Choice ***(Test for Continuous Enrollment (CE))*** for
+    -   105 days before the IPSD, **and**
+    -   231 days after the IPSD
+
+Check out the visualization of the AMM Eligibility Model below. There are many components of this model with overlapping time frames. We will describe these steps in further detail in the next section.
+
+![AMM Eligibility Model, NCQA HEDIS My2023](./data/DataModel/Graphic_AMMEligibilityModel2023.png){width=80%}
+
+
+You may also think of the criteria as a tumbling bike lock. All four criteria must line up, *in the right order*, for the lock to open. Once unlocked, the resulting dataset es El Dato Verdad, the **Real Data**.
+
+| **AMM Eligibility Model, Primary criteria:**<br>1.  Index Prescription Start Date (IPSD)<br>2.  Negative Medication History (NMH)<br>3.  Major Depressive Diagnosis (MDDx)<br>4.  Continuous Enrollment (CE) | ![](./images/bikelock.jpg){fig-alt="A tumbling bike lock representing the AMM Model" align="right" width="75%"} |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+
+
+
+
+```{sql}
+#| label: PBMClaims from data warehouse
+#| eval: false
+#| include: true
+#| echo: true
+#| code-fold: show
+#| warning: false
+#| error: false
+
+# connection=QRPTP01, output.var="results"
+
+-- Fill data with "Intake Period"
+-- Measurement year: 1/1/23 - 12/31/23
+-- One year BEFORE the measurement year: 1/1/22 - 12/13/22
+-- 12-month window starting on May 1 of the year prior to the measurement year: 5/1/22 - 4/30/2023
+-- The Negative Medication Range is: 1/16/2022 - 1/15/22
+-- The final date range for this query is: 1/16/2022 - 4/30/2022
+
+-- Declare Date Range
+Declare @start as date = '01-16-2022'
+Declare @end as date = '04-30-2023'
+
+SELECT
+  pbm.clientID,
+  id.PrimaryId,
+  pbm.AsOfDate,
+  pbm.dtefilled,
+  pbm.GpiNumber,
+  pbm.GPIClassification,
+  pbm.prodname,
+  pbm.genericnme,
+  pbm.LabelName,
+  pbm.GroupId,
+  pbm.preslstnme,
+  pbm.pbmrxclaimnbr,
+  pbm.claimsts,
+  pbm.AmtPaidFinal,
+  pbm.productid,
+  pbm.decimalqty,
+  pbm.dayssupply,
+  pbm.Gender,
+  pbm.birthdte,
+  pbm.mbrage
+FROM
+  PBM.dbo.HCICPharmacyClaimSummary pbm
+  LEFT OUTER JOIN GlobalMembers.dbo.ClientIdPlus id ON pbm.clientID = id.AzAhcccsId
+WHERE
+  pbm.dtefilled BETWEEN @start AND @end
+
+```
+
