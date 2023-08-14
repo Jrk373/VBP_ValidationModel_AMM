@@ -1,0 +1,397 @@
+---
+title: "Validation Model, NCQA My HEDIS 2023"
+subtitle: "Antidepressant Medication Management"
+author: 
+  name: "John Ryan Kivela, MA and Victoria Tewa, LPC"
+  email: "Ryan.Kivela@narbha.org"
+  affiliation: "The Alliance ACO"
+date: today
+date-format: long
+format:
+  html:
+    theme: pulse
+    embed-resources: true
+    toc: true
+    toc-depth: 6
+    code-fold: true
+    footnotes-hover: true
+---
+
+# Set Up
+
+```{r}
+#| label: Setup
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+## Load Libraries
+library(tidyverse)
+library(readxl)
+library(kableExtra)
+library(gt)
+library(scales)
+library(utils)
+library(lubridate)
+library(RODBC)
+library(DBI)
+library(odbc)
+library(dbplyr)
+
+# Set up ODBC Connection
+# QRPTP01 <- DBI::dbConnect(odbc::odbc(),"AllianceData")
+
+
+# QRPTP01 <- dbConnect("AllianceData", 
+#                           uid = "john.kivela@azblue.com", 
+#                           pwd = "F@reverGr33n02")
+
+# Create table for inline code
+InLineCode <- data.frame(
+  ReportDate = "04-27-2023",
+  MeasurementYear = "01-01-2023 to 12-31-2023",
+  ClaimsAdjudicatedThrough = "02-28-2023",
+  HEDISVersion = "My 2023",
+  IntakePeriod = "05-01-2022 to 04-30-2023",
+  NegativeMedicationHistory = "01-16-222 to 01-15-2023",
+    IPSDstart_date = as.Date("2022-05-01"),
+    IPSDend_date = as.Date("2023-04-30"),
+    NMHstart_date = as.Date("2022-01-16"),
+    NMHend_date = as.Date("2023-01-15")
+)
+
+ProviderShortName <- c("")
+
+# Define custom inline code hook for comma separators
+comma_separator_hook <- function(x) {
+  formatted <- format(x, big.mark = ",")
+  knitr::asis_output(formatted)
+}
+
+# Set the inline code hook globally
+knitr::knit_hooks$set(inline = comma_separator_hook)
+```
+
+# Pre-Load Data
+
+```{r}
+
+Enrollments_AllACC <- read.csv("./data/output/Enrollments_AllACC.csv")
+GM_ALLAZ_Enrollments <- read.csv("./data/output/GM_AllAZ_Enrollments.csv")
+GM_ALLAZ_Addresses <- read.csv("./data/output/GM_AllAZ_Addresses.csv")
+GM_PrimaryAssignedClinic <- read.csv("./data/output/GM_PrimaryAssignedClinic.csv")
+GM_HealthHomes <- read.csv("./data/output/GM_HealthHomes.csv")
+Clients_Demographics_AllACC <- read.csv("./data/output/Clients.csv")
+GM_DUGLess <- read.csv("./data/output/DUGLess.csv")
+Claims_AllHCA <- read.csv("./data/output/Claims_AllHCA.csv")
+AllTheVariables <- read.csv("./data/AllTheVariables.csv")
+
+
+```
+
+# Enrollments
+
+## Enrollment Roster
+```{sql, connection = QRPTP01, output.var = "Enrollments_AllACC"}
+#| label: AHCCCS Enrollments
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+declare @AzACC int = narbha.dbo.ufn_GetIntLobIdFromLobName('ArizonaAcc', getdate());
+
+declare @AzRbha int = narbha.dbo.ufn_GetIntLobIdFromLobName('AzRBHA', getdate());
+
+declare @AzSO int = narbha.dbo.ufn_GetIntLobIdFromLobName('AZ State Only', getdate());
+
+declare @AzHCIC int = narbha.dbo.ufn_GetIntLobIdFromLobName('HCIC', getdate());
+
+SELECT * 
+
+FROM GlobalMembers.dbo.Enrollments 
+
+WHERE lobid = @AzACC 
+  AND void = 0 
+  
+ORDER BY PrimaryId , EnrollmentDate DESC
+
+```
+
+```{r}
+#| label: Write AHCCCS Enrollments
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+# write.csv(Enrollments_AllACC, "./data/output/Enrollments_AllACC.csv")
+
+```
+
+## All AZ Enrollments Data
+
+```{sql, connection = QRPTP01, output.var = "GM_ALLAZ_Enrollments"}
+#| label: GM All AZ Enrollments
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+SELECT * 
+
+FROM GlobalMembers.dbo.DailyMemberShipAllArizonaEnrollments
+
+WHERE void = 0 
+  
+ORDER BY PrimaryId
+```
+
+```{r}
+#| label: Write GM All AZ Enrollments
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+# write.csv(GM_ALLAZ_Enrollments, "./data/output/GM_AllAZ_Enrollments.csv")
+
+```
+
+## All AZ Addresses Data
+
+```{sql, connection = QRPTP01, output.var = "GM_ALLAZ_Addresses"}
+#| label: GM All AZ Addresses
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+SELECT * 
+
+FROM GlobalMembers.dbo.DailyMemberShipAllArizonaAddresses
+
+WHERE Void = 0 
+  
+```
+
+```{r}
+#| label: Write GM All AZ Addresses
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+# write.csv(GM_ALLAZ_Addresses, "./data/output/GM_AllAZ_Addresses.csv")
+
+```
+
+## Primary Assigned Clinic
+
+```{sql, connection = QRPTP01, output.var = "GM_PrimaryAssignedClinic"}
+#| label: GM Primary Assigned Clinic
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+SELECT * 
+
+FROM GlobalMembers.dbo.PrimaryAssignedClinic
+
+WHERE Void = 0 
+  
+```
+
+```{r}
+#| label: Write GM Primary Assigned Clinic
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+# write.csv(GM_PrimaryAssignedClinic, "./data/output/GM_PrimaryAssignedClinic.csv")
+
+```
+
+## Health Homes
+
+```{sql, connection = QRPTP01, output.var = "GM_HealthHomes"}
+#| label: GM Health Homes
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+SELECT * 
+
+FROM GlobalMembers.dbo.HealthHomes
+
+WHERE Void = 0 
+  
+```
+
+```{r}
+#| label: Write GM Health Homes
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+# write.csv(GM_HealthHomes, "./data/output/GM_HealthHomes.csv")
+
+```
+
+# Demographics
+
+## Clients
+
+```{sql, connection = QRPTP01, output.var = "Clients_Demographics_AllACC"}
+#| label: Client Demograhics
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+declare @AzACC int = narbha.dbo.ufn_GetIntLobIdFromLobName('ArizonaAcc', getdate());
+
+declare @AzRbha int = narbha.dbo.ufn_GetIntLobIdFromLobName('AzRBHA', getdate());
+
+declare @AzSO int = narbha.dbo.ufn_GetIntLobIdFromLobName('AZ State Only', getdate());
+
+declare @AzHCIC int = narbha.dbo.ufn_GetIntLobIdFromLobName('HCIC', getdate());
+
+SELECT * 
+
+FROM GlobalMembers.dbo.Clients
+
+WHERE lobid = @AzACC 
+  AND void = 0 
+  
+ORDER BY LastName DESC
+
+```
+
+```{r}
+#| label: Write Client Demographics
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+# write.csv(Clients_Demographics_AllACC, "./data/output/Clients.csv")
+
+```
+
+## Dugless
+
+```{sql, connection = QRPTP01, output.var = "GM_DUGLess"}
+#| label: GM DugLess
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+SELECT * 
+
+FROM GlobalMembers.dbo.DUGLessDemographics
+
+WHERE Void = 0 
+  
+```
+
+```{r}
+#| label: Write Dugless
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+# write.csv(GM_DUGLess, "./data/output/DUGLess.csv")
+
+```
+
+# Claims
+
+```{sql, connection = QRPTP01, output.var = "Claims_AllHCA"}
+#| label: BH Claims
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+Declare @start as date = '01-16-2022'
+Declare @end as date = '10-30-2023'
+
+SELECT *
+
+FROM Claims.dbo.shcaVos
+
+WHERE BegDate BETWEEN @start AND @end
+
+```
+
+```{r}
+#| label: Write Claims All HCA
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+# write.csv(Claims_AllHCA, "./data/output/Claims_AllHCA.csv")
+```
+
+# All The Varaibles
+
+```{r}
+
+Enrollments.Vars <- names(Enrollments_AllACC)
+Clients.Vars <- names(Clients_Demographics_AllACC)
+Claims.Vars <- names(Claims_AllHCA)
+GM_ALLAZ_Enrollments.Vars <- names(GM_ALLAZ_Enrollments)
+GM_ALLAZ_Addresses.Vars <- names(GM_ALLAZ_Addresses)
+GM_PrimaryAssignedClinic.Vars <- names(GM_PrimaryAssignedClinic)
+GM_HealthHomes.Vars <- names(GM_HealthHomes)
+GM_DUGLess.Vars <- names(GM_DUGLess)
+
+max.len = max(length(Enrollments.Vars), length(Clients.Vars), length(Claims.Vars))
+Enrollments.Vars = c(Enrollments.Vars, rep(NA, max.len - length(Enrollments.Vars)))
+Clients.Vars = c(Clients.Vars, rep(NA, max.len - length(Clients.Vars)))
+Claims.Vars = c(Claims.Vars, rep(NA, max.len - length(Claims.Vars)))
+GM_ALLAZ_Enrollments.Vars = c(GM_ALLAZ_Enrollments.Vars, rep(NA, max.len - length(GM_ALLAZ_Enrollments.Vars)))
+GM_ALLAZ_Addresses.Vars = c(GM_ALLAZ_Addresses.Vars, rep(NA, max.len - length(GM_ALLAZ_Addresses.Vars)))
+GM_PrimaryAssignedClinic.Vars = c(GM_PrimaryAssignedClinic.Vars, rep(NA, max.len - length(GM_PrimaryAssignedClinic.Vars)))
+GM_HealthHomes.Vars = c(GM_HealthHomes.Vars, rep(NA, max.len - length(GM_HealthHomes.Vars)))
+GM_DUGLess.Vars = c(GM_DUGLess.Vars, rep(NA, max.len - length(GM_DUGLess.Vars)))
+
+AllTheVariables <- data.frame(Enrollments.Vars,
+                              Clients.Vars,
+                              Claims.Vars,
+                              GM_ALLAZ_Enrollments.Vars,
+                              GM_ALLAZ_Addresses.Vars,
+                              GM_PrimaryAssignedClinic.Vars,
+                              GM_HealthHomes.Vars,
+                              GM_DUGLess.Vars
+                              )
+# write.csv(AllTheVariables, "./data/AllTheVariables.csv")
+
+```
+

@@ -1,0 +1,226 @@
+---
+title: "Validation Model, NCQA My HEDIS 2023"
+subtitle: "Antidepressant Medication Management"
+author: 
+  name: "John Ryan Kivela, MA and Victoria Tewa, LPC"
+  email: "Ryan.Kivela@narbha.org"
+  affiliation: "The Alliance ACO"
+date: today
+date-format: long
+format:
+  html:
+    theme: pulse
+    embed-resources: true
+    toc: true
+    toc-depth: 6
+    code-fold: true
+    footnotes-hover: true
+---
+
+# Set Up
+
+```{r}
+#| label: Setup
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+## Load Libraries
+library(tidyverse)
+library(readxl)
+library(kableExtra)
+library(gt)
+library(scales)
+library(utils)
+library(lubridate)
+library(RODBC)
+library(DBI)
+library(odbc)
+library(dbplyr)
+
+# Create table for inline code
+InLineCode <- data.frame(
+  ReportDate = "04-27-2023",
+  MeasurementYear = "01-01-2023 to 12-31-2023",
+  ClaimsAdjudicatedThrough = "02-28-2023",
+  HEDISVersion = "My 2023",
+  IntakePeriod = "05-01-2022 to 04-30-2023",
+  NegativeMedicationHistory = "01-16-222 to 01-15-2023",
+    IPSDstart_date = as.Date("2022-05-01"),
+    IPSDend_date = as.Date("2023-04-30"),
+    NMHstart_date = as.Date("2022-01-16"),
+    NMHend_date = as.Date("2023-01-15")
+)
+
+# Define custom inline code hook for comma separators
+comma_separator_hook <- function(x) {
+  formatted <- format(x, big.mark = ",")
+  knitr::asis_output(formatted)
+}
+
+# Set the inline code hook globally
+knitr::knit_hooks$set(inline = comma_separator_hook)
+
+# Vector of Alliance Provider Name
+Provider_ShortName <- (c("CBI", "CPIH", "EHS", "LCBHC", "MMHC", "SHG", "SBH", "TGC", "WYGC"))
+
+# Vector of NAZ Counties
+NAZ_Counties <- (c("Apache", "Coconino", "Mohave", "Navajo", "Yavapai"))
+```
+
+# Pre-Load Data
+
+```{r}
+# Enrollments
+Enrollments_AllACC <- read.csv("./data/output/Enrollments_AllACC.csv")
+GM_ALLAZ_Enrollments <- read.csv("./data/output/GM_AllAZ_Enrollments.csv")
+GM_ALLAZ_Addresses <- read.csv("./data/output/GM_AllAZ_Addresses.csv")
+GM_PrimaryAssignedClinic <- read.csv("./data/output/GM_PrimaryAssignedClinic.csv")
+GM_HealthHomes <- read.csv("./data/output/GM_HealthHomes.csv")
+
+# Demographics
+Clients_Demographics_AllACC <- read.csv("./data/output/Clients.csv")
+GM_DUGLess <- read.csv("./data/output/DUGLess.csv")
+
+# Claims
+Claims_AllHCA <- read.csv("./data/output/Claims_AllHCA.csv")
+
+# Value Sets
+MyHEDIS2023_AllValueSetsToCodes <- read_xlsx("./documents/M. HEDIS MY 2023 Volume 2 Value Set Directory 2023-03-31 - Copy.xlsx", sheet = "Value Sets to Codes")
+
+MyHEDIS2023_MedicationDirectory <- read_xlsx("./documents/HEDIS MY 2023 Medication List Directory 2023-03-31.xlsx", sheet = "Medication Lists to Codes")
+
+# Summary
+AllTheVariables <- read.csv("./data/AllTheVariables.csv")
+
+```
+
+# Step 1
+
+Determine the IPSD. Identify the date of the earliest dispensing event for an antidepressant medication (Antidepressant Medications List) during the intake period.
+
+```{r}
+# Identify Alliance Membership
+
+#Merge Enrollment files
+
+AllianceEnrolledMembers_Merge <-
+  merge(x = Enrollments_AllACC,
+        y = Clients_Demographics_AllACC,
+        by = "PrimaryId",
+        all.x = TRUE)
+  
+AllianceEnrolledMembers_Merge <-  
+  AllianceEnrolledMembers_Merge |> 
+  select(
+    PrimaryId,
+    EnrollmentDate,
+    DisenrollmentDate,
+    DOB,
+    DOD
+  )
+
+AllianceEnrolledMembers_Merge <-
+  merge(x = AllianceEnrolledMembers_Merge,
+        y = GM_ALLAZ_Enrollments,
+        by = "PrimaryId",
+        all.x = TRUE)
+
+AllianceEnrolledMembers_Merge <-
+  AllianceEnrolledMembers_Merge |> 
+  select(
+    PrimaryId,
+    EnrollmentDate.x,
+    DisenrollmentDate.x,
+    DOB,
+    DOD,
+    BHHShortName
+  )
+
+AllianceEnrolledMembers_Merge <-
+  merge(x = AllianceEnrolledMembers_Merge,
+        y = GM_ALLAZ_Addresses,
+        by = "PrimaryId",
+        all.x = TRUE)
+
+AllianceEnrolledMembers_Merge <- 
+  AllianceEnrolledMembers_Merge |> 
+  select(
+    PrimaryId,
+    EnrollmentDate.x,
+    DisenrollmentDate.x,
+    DOB,
+    DOD,
+    BHHShortName,
+    ResCountyName
+  )
+
+# Trim extra spaces at end of rescountyname
+
+AllianceEnrolledMembers_Merge$ResCountyName <-
+  trimws(AllianceEnrolledMembers_Merge$ResCountyName)
+
+# Filter for The Alliance Providers and the Northern Counties
+
+AllianceEnrolledMembers <-
+  AllianceEnrolledMembers_Merge |> 
+  filter(BHHShortName %in% Provider_ShortName)
+
+AllianceEnrolledMembers <-
+  AllianceEnrolledMembers |> 
+  filter(ResCountyName %in% NAZ_Counties)
+
+# Filter out dead people (no offense intended)
+
+AllianceEnrolledMembers <-
+  AllianceEnrolledMembers |> 
+  filter(is.na(DOD))
+
+## Write to CSV
+# write.csv(AllianceEnrolledMembers, "./data/output/AllianceEnrolledMembers.csv")
+
+```
+
+```{r}
+
+# Antidepressant Medication List
+
+# Filter the dataframe for "Antidepressant Medications"
+AntidepressantMedications <- MyHEDIS2023_MedicationDirectory |> 
+  filter(`Medication List Name` == "Antidepressant Medications")
+
+# Extract the associated code values as a vector
+AntidepressantMedicationList <- AntidepressantMedications$Code
+
+# Filter the Claims for only antidepressant medications
+IPSD <-
+  Claims_AllHCA |> 
+  filter(MedicationNDC %in% AntidepressantMedicationList)
+
+# Filter IPSD for the intake period 5/1/22 - 4/30/23
+
+# Specify the start and end dates
+IPSD_start_date <- as.Date("2022-05-01")
+IPSD_end_date <- as.Date("2023-04-30")
+
+IPSD <- 
+  IPSD |> 
+  filter(BegDate >= IPSD_start_date, 
+         BegDate <= IPSD_end_date)
+
+Step1_IPSD <-
+  IPSD |> 
+  filter(PrimaryID %in% AllianceEnrolledMembers$PrimaryId) |> 
+  select(
+    PrimaryID,
+    BegDate
+  ) |> 
+  rename("IPSD" = BegDate)
+
+## Write to CSV
+# write.csv(IPSD, "./data/output/IndexPrescStartDate.csv")
+
+```
+
