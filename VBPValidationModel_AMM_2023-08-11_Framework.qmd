@@ -78,14 +78,14 @@ knitr::knit_hooks$set(inline = comma_separator_hook)
 
 ```{r}
 
-Enrollments_AllACC <- read.csv("./data/output/Enrollments_AllACC.csv")
-GM_ALLAZ_Enrollments <- read.csv("./data/output/GM_AllAZ_Enrollments.csv")
-GM_ALLAZ_Addresses <- read.csv("./data/output/GM_AllAZ_Addresses.csv")
-GM_PrimaryAssignedClinic <- read.csv("./data/output/GM_PrimaryAssignedClinic.csv")
-GM_HealthHomes <- read.csv("./data/output/GM_HealthHomes.csv")
-Clients_Demographics_AllACC <- read.csv("./data/output/Clients.csv")
-GM_DUGLess <- read.csv("./data/output/DUGLess.csv")
-Claims_AllHCA <- read.csv("./data/output/Claims_AllHCA.csv")
+Enrollments_AllACC <- read.csv("./data/input/Enrollments_AllACC.csv")
+GM_ALLAZ_Enrollments <- read.csv("./data/input/GM_AllAZ_Enrollments.csv")
+GM_ALLAZ_Addresses <- read.csv("./data/input/GM_AllAZ_Addresses.csv")
+GM_PrimaryAssignedClinic <- read.csv("./data/input/GM_PrimaryAssignedClinic.csv")
+GM_HealthHomes <- read.csv("./data/input/GM_HealthHomes.csv")
+Clients_Demographics_AllACC <- read.csv("./data/input/Clients.csv")
+GM_DUGLess <- read.csv("./data/input/DUGLess.csv")
+Claims_AllHCA <- read.csv("./data/input/Claims_AllHCA.csv")
 AllTheVariables <- read.csv("./data/AllTheVariables.csv")
 
 
@@ -129,7 +129,7 @@ ORDER BY PrimaryId , EnrollmentDate DESC
 #| warning: false
 #| error: false
 
-# write.csv(Enrollments_AllACC, "./data/output/Enrollments_AllACC.csv")
+write.csv(Enrollments_AllACC, "./data/input/Enrollments_AllACC.csv")
 
 ```
 
@@ -160,7 +160,7 @@ ORDER BY PrimaryId
 #| warning: false
 #| error: false
 
-# write.csv(GM_ALLAZ_Enrollments, "./data/output/GM_AllAZ_Enrollments.csv")
+write.csv(GM_ALLAZ_Enrollments, "./data/input/GM_AllAZ_Enrollments.csv")
 
 ```
 
@@ -190,7 +190,7 @@ WHERE Void = 0
 #| warning: false
 #| error: false
 
-# write.csv(GM_ALLAZ_Addresses, "./data/output/GM_AllAZ_Addresses.csv")
+write.csv(GM_ALLAZ_Addresses, "./data/input/GM_AllAZ_Addresses.csv")
 
 ```
 
@@ -220,7 +220,7 @@ WHERE Void = 0
 #| warning: false
 #| error: false
 
-# write.csv(GM_PrimaryAssignedClinic, "./data/output/GM_PrimaryAssignedClinic.csv")
+write.csv(GM_PrimaryAssignedClinic, "./data/input/GM_PrimaryAssignedClinic.csv")
 
 ```
 
@@ -250,7 +250,7 @@ WHERE Void = 0
 #| warning: false
 #| error: false
 
-# write.csv(GM_HealthHomes, "./data/output/GM_HealthHomes.csv")
+write.csv(GM_HealthHomes, "./data/input/GM_HealthHomes.csv")
 
 ```
 
@@ -293,7 +293,7 @@ ORDER BY LastName DESC
 #| warning: false
 #| error: false
 
-# write.csv(Clients_Demographics_AllACC, "./data/output/Clients.csv")
+write.csv(Clients_Demographics_AllACC, "./data/input/Clients.csv")
 
 ```
 
@@ -323,7 +323,7 @@ WHERE Void = 0
 #| warning: false
 #| error: false
 
-# write.csv(GM_DUGLess, "./data/output/DUGLess.csv")
+write.csv(GM_DUGLess, "./data/input/DUGLess.csv")
 
 ```
 
@@ -356,7 +356,37 @@ WHERE BegDate BETWEEN @start AND @end
 #| warning: false
 #| error: false
 
-# write.csv(Claims_AllHCA, "./data/output/Claims_AllHCA.csv")
+write.csv(Claims_AllHCA, "./data/input/Claims_AllHCA.csv")
+```
+
+```{sql, connection = QRPTP01, output.var = "Claims_PBM_AllHCA"}
+#| label: PBM Claims
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+Declare @start as date = '01-16-2022'
+Declare @end as date = '10-30-2023'
+
+SELECT *
+
+FROM PBM.dbo.HCICPharmacyClaimSummary
+
+WHERE dtfilled BETWEEN @start AND @end
+
+```
+
+```{r}
+#| label: Write PBM Claims All HCA
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+write.csv(Claims_AllHCA, "./data/input/Claims_PBM_AllHCA.csv")
 ```
 
 # All The Varaibles
@@ -371,6 +401,7 @@ GM_ALLAZ_Addresses.Vars <- names(GM_ALLAZ_Addresses)
 GM_PrimaryAssignedClinic.Vars <- names(GM_PrimaryAssignedClinic)
 GM_HealthHomes.Vars <- names(GM_HealthHomes)
 GM_DUGLess.Vars <- names(GM_DUGLess)
+Claims_PBM_AllHCA.Vars <- names(Claims_PBM_AllHCA)
 
 max.len = max(length(Enrollments.Vars), length(Clients.Vars), length(Claims.Vars))
 Enrollments.Vars = c(Enrollments.Vars, rep(NA, max.len - length(Enrollments.Vars)))
@@ -381,17 +412,19 @@ GM_ALLAZ_Addresses.Vars = c(GM_ALLAZ_Addresses.Vars, rep(NA, max.len - length(GM
 GM_PrimaryAssignedClinic.Vars = c(GM_PrimaryAssignedClinic.Vars, rep(NA, max.len - length(GM_PrimaryAssignedClinic.Vars)))
 GM_HealthHomes.Vars = c(GM_HealthHomes.Vars, rep(NA, max.len - length(GM_HealthHomes.Vars)))
 GM_DUGLess.Vars = c(GM_DUGLess.Vars, rep(NA, max.len - length(GM_DUGLess.Vars)))
+Claims_PBM_AllHCA.Vars = c(Claims_PBM_AllHCA.Vars, rep(NA, max.len - length(Claims_PBM_AllHCA.Vars)))
 
 AllTheVariables <- data.frame(Enrollments.Vars,
                               Clients.Vars,
                               Claims.Vars,
+                              Claims_PBM_AllHCA.Vars,
                               GM_ALLAZ_Enrollments.Vars,
                               GM_ALLAZ_Addresses.Vars,
                               GM_PrimaryAssignedClinic.Vars,
                               GM_HealthHomes.Vars,
                               GM_DUGLess.Vars
                               )
-# write.csv(AllTheVariables, "./data/AllTheVariables.csv")
+write.csv(AllTheVariables, "./data/input/AllTheVariables.csv")
 
 ```
 
