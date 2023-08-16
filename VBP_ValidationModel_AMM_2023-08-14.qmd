@@ -100,7 +100,7 @@ AllTheVariables <- read.csv("./data/AllTheVariables.csv")
 
 # Step 1
 
-Determine the IPSD. Identify the date of the earliest dispensing event for an antidepressant medication (Antidepressant Medications List) during the intake period.
+Determine the IPSDate. Identify the date of the earliest dispensing event for an antidepressant medication (Antidepressant Medications List) during the intake period.
 
 ```{r}
 # Identify Alliance Membership
@@ -222,7 +222,7 @@ Step1_IPSD <-
     PrimaryID,
     BegDate
   ) |> 
-  rename("IPSD" = BegDate)
+  rename("IPSDate" = BegDate)
 
 ## Write to CSV
 # write.csv(IPSD, "./data/output/IndexPrescStartDate.csv")
@@ -231,7 +231,7 @@ Step1_IPSD <-
 
 # Step 2: Required Exclusions
 
-Members who did not have an encounter with a diagnosis of major depression during the 121-day period from 60 days prior to the IPSD, through the IPSD and the 60 days after the IPSD. 
+Members who did not have an encounter with a diagnosis of major depression during the 121-day period from 60 days prior to the IPSDate, through the IPSDate and the 60 days after the IPSDate. 
 
 ```{r}
 # Major Depressive Disorder Diagnosis Codes
@@ -324,16 +324,16 @@ MDDTest_Final <-
 
 ```{r}
 
-# Convert IPSD and BegDate to Date type
+# Convert IPSDate and BegDate to Date type
 Step1_IPSD <- Step1_IPSD |>
-  mutate(IPSD = as.Date(IPSD))
+  mutate(IPSDate = as.Date(IPSDate))
 MDDTest_Final <- MDDTest_Final |>
   mutate(BegDate = as.Date(BegDate))
 
 # Perform the comparison and calculations using dplyr
 MDDTest_Result <- Step1_IPSD |>
   inner_join(MDDTest_Final, by = "PrimaryID") |>
-  mutate(TimeDiff = as.numeric(BegDate - IPSD))
+  mutate(TimeDiff = as.numeric(BegDate - IPSDate))
 
 MDDTest_Result <- MDDTest_Result |> 
   mutate(MDDxTest_PrePost = if_else(TimeDiff > -60 & TimeDiff < 60, 1, 0)) |> 
@@ -343,7 +343,7 @@ MDDTest_ResultFinal <- MDDTest_Result |>
   filter(MDDxTest_PrePost > 0) |> 
   select(
     PrimaryID,
-    IPSD,
+    IPSDate,
     MDDDate,
     PrimaryID,
     Svccode,
@@ -361,7 +361,7 @@ MDDTest_ResultFinal <- MDDTest_Result |>
 
 Members who meet any of the following criteria remain in the eligible population:
 
-Step 2a:
+## Step 2a:
 
 An acute or nonacute inpatient stay with any diagnosis of major depression (Major Depression Value Set) on the discharge claim. To identify acute and nonacute inpatient stays:
 
@@ -393,7 +393,7 @@ MDDTest_2a <-
   mutate(MDDDate = as.Date(MDDDate))
 MDDTest_2a <- 
   MDDTest_2a |>
-  mutate(IPSD = as.Date(IPSD))
+  mutate(IPSDate = as.Date(IPSDate))
 MDDTest_2a <-
   MDDTest_2a |>
   mutate(AdmitDate = as.Date(AdmitDate))
@@ -404,13 +404,13 @@ MDDTest_2a <-
 # Perform calculations of time difference
 MDDTest_2a <- 
   MDDTest_2a |>
-  mutate(Admit_TimeDiff = as.numeric(IPSD - AdmitDate))
+  mutate(Admit_TimeDiff = as.numeric(IPSDate - AdmitDate))
 
 MDDTest_2a <- 
   MDDTest_2a |>
-  mutate(Discharge_TimeDiff = as.numeric(IPSD - DischargeDate))
+  mutate(Discharge_TimeDiff = as.numeric(IPSDate - DischargeDate))
 
-# Test for admit and/or discharge date that is less than 60 days from the date of the IPSD
+# Test for admit and/or discharge date that is less than 60 days from the date of the IPSDate
 MDDTest_2a <- 
   MDDTest_2a |> 
   mutate(MDDTest_AdmitDate = if_else(Admit_TimeDiff > -60 & Admit_TimeDiff < 60, 1, 0))
@@ -430,20 +430,176 @@ MDDTest_ResultFinal_2a <-
   MDDTest_2a |> 
   select(
     PrimaryID,
-    IPSD,
+    IPSDate,
     MDDDate,
-    PrimaryID,
-    Svccode,
-    Placesvc,
     AdmitDate,
     DischargeDate,
+    Svccode,
+    Placesvc,
     MDDTest_2aResult
   )
 ```
 
+## Step 2b
 
+An acute inpatient encounter with any diagnosis of major depression: Acute Inpatient Value Set with Major Depression Value Set.
 
+```{r}
 
+# Extract the inpatient value set
+
+AcuteInpatientValueSetCodes <- 
+MyHEDIS2023_AllValueSetsToCodes |> 
+  filter(`Value Set Name` == "Acute Inpatient")
+  
+# Extract the associated code values as a vector
+AcuteInpatientValueSetCodesList <- AcuteInpatientValueSetCodes$Code
+
+```
+
+```{r}
+
+MDDTest_ResultFinal_2b <-
+  MDDTest_ResultFinal_2a |> 
+  mutate(MDDTest_2bResult = if_else(Svccode %in% AcuteInpatientValueSetCodesList, 1, 0))
+
+```
+
+## Step 2c
+
+A nonacute inpatient encounter with any diagnosis of major depression: Nonacute Inpatient Value Set with Major Depression Value Set.
+
+```{r}
+
+# Extract the inpatient value set
+
+NonAcuteInpatientValueSetCodes <- 
+MyHEDIS2023_AllValueSetsToCodes |> 
+  filter(`Value Set Name` == "Nonacute Inpatient")
+  
+# Extract the associated code values as a vector
+NonAcuteInpatientValueSetCodesList <- NonAcuteInpatientValueSetCodes$Code
+
+```
+
+```{r}
+
+MDDTest_ResultFinal_2c <-
+  MDDTest_ResultFinal_2b |> 
+  mutate(MDDTest_2cResult = if_else(Svccode %in% NonAcuteInpatientValueSetCodesList, 1, 0))
+
+```
+
+## Step 2d
+
+```{r}
+
+# Extract the value set
+
+ValueSetCodes_VisitSettingUnpsecified <- 
+MyHEDIS2023_AllValueSetsToCodes |> 
+  filter(`Value Set Name` == "Visit Setting Unspecified")
+  
+# Extract the associated code values as a vector
+ValueSetCodesList_VisitSettingUnspecified <- ValueSetCodes_VisitSettingUnpsecified$Code
+
+# Extract the value set
+
+ValueSetCodes_OutpatientPOS <- 
+MyHEDIS2023_AllValueSetsToCodes |> 
+  filter(`Value Set Name` == "Outpatient POS")
+  
+# Extract the associated code values as a vector
+ValueSetCodesList_OutpatientPOS <- ValueSetCodes_OutpatientPOS$Code
+
+```
+
+```{r}
+
+MDDTest_ResultFinal_2d <-
+  MDDTest_ResultFinal_2c |> 
+  mutate(MDDTest_2dResult = if_else(Svccode %in% ValueSetCodesList_VisitSettingUnspecified &
+                                      Placesvc %in% ValueSetCodesList_OutpatientPOS, 1, 0))
+
+```
+
+## Step 2e
+
+An outpatient visit with any diagnosis of major depression: BH Outpatient Value Set with Major Depression Value Set.
+
+```{r}
+
+# Extract the inpatient value set
+
+ValueSetCodes_BHOutpatient <- 
+MyHEDIS2023_AllValueSetsToCodes |> 
+  filter(`Value Set Name` == "BH Outpatient")
+  
+# Extract the associated code values as a vector
+ValueSetCodesList_BHOutpatient <- ValueSetCodes_BHOutpatient$Code
+
+```
+
+```{r}
+
+MDDTest_ResultFinal_2e <-
+  MDDTest_ResultFinal_2d |> 
+  mutate(MDDTest_2eResult = if_else(Svccode %in% ValueSetCodesList_BHOutpatient, 1, 0))
+
+```
+
+## Step 2f
+
+An intensive outpatient encounter or partial hospitalization with any diagnosis of major depression: Visit Setting Unspecified Value Set with Partial Hospitalization POS Value Set with Major Depression Value Set.
+
+```{r}
+
+# Extract the inpatient value set
+
+ValueSetCodes_PartialHospitalizationPOS <- 
+MyHEDIS2023_AllValueSetsToCodes |> 
+  filter(`Value Set Name` == "Partial Hospitalization POS")
+  
+# Extract the associated code values as a vector
+ValueSetCodesList_PartialHospitalizationPOS <- ValueSetCodes_PartialHospitalizationPOS$Code
+
+```
+
+```{r}
+
+MDDTest_ResultFinal_2f <-
+  MDDTest_ResultFinal_2e |> 
+  mutate(MDDTest_2fResult = if_else(Svccode %in% ValueSetCodes_VisitSettingUnpsecified &
+                                      Placesvc %in% ValueSetCodes_PartialHospitalizationPOS, 1, 0))
+
+```
+
+## Step 2g
+
+An intensive outpatient encounter or partial hospitalization with any diagnosis of major depression: Partial Hospitalization or Intensive Outpatient Value Set with Major Depression Value Set.
+
+**Note: Do we need to go back for UBREV codes?**
+
+```{r}
+
+# Extract the value set
+
+ValueSetCodes_PartialHospitalizationOrIntensiveOutpatient <- 
+MyHEDIS2023_AllValueSetsToCodes |> 
+  filter(`Value Set Name` == "Partial Hospitalization or Intensive Outpatient")
+  
+# Extract the associated code values as a vector
+ValueSetCodesList_PartialHospitalizationOrIntensiveOutpatient <- ValueSetCodes_PartialHospitalizationOrIntensiveOutpatient$Code
+
+```
+
+```{r}
+
+MDDTest_ResultFinal_2g <-
+  MDDTest_ResultFinal_2f |> 
+  mutate(MDDTest_2fResult = if_else(Svccode %in% ValueSetCodes_PartialHospitalizationOrIntensiveOutpatient, 1, 0))
+
+```
 
 
 
