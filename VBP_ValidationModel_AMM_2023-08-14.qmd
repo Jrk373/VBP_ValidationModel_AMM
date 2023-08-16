@@ -324,18 +324,15 @@ MDDTest_Final <-
 
 ```{r}
 
-# Set the allowed time difference in days
-allowed_time_difference <- 60
-
 # Convert IPSD and BegDate to Date type
-Step1_IPSD <- Step1_IPSD %>%
+Step1_IPSD <- Step1_IPSD |>
   mutate(IPSD = as.Date(IPSD))
-MDDTest_Final <- MDDTest_Final %>%
+MDDTest_Final <- MDDTest_Final |>
   mutate(BegDate = as.Date(BegDate))
 
 # Perform the comparison and calculations using dplyr
-MDDTest_Result <- Step1_IPSD %>%
-  inner_join(MDDTest_Final, by = "PrimaryID") %>%
+MDDTest_Result <- Step1_IPSD |>
+  inner_join(MDDTest_Final, by = "PrimaryID") |>
   mutate(TimeDiff = as.numeric(BegDate - IPSD))
 
 MDDTest_Result <- MDDTest_Result |> 
@@ -385,10 +382,63 @@ InpatientValueSetCodesList <- InpatientValueSetCodes$Code
 
 ```{r}
 
-MDDTest_ResultFinal_2a <-
+# Determine if there is a valid "inpatient stay" code
+MDDTest_2a <-
   MDDTest_ResultFinal |> 
-  filter(Svccode %in% InpatientValueSetCodesList)
+  mutate(MDDTest_2a = if_else(Svccode %in% InpatientValueSetCodesList, 1, 0))
 
+# Convert MDDDate, AdmitDate and Discharge date to Date type
+MDDTest_2a <- 
+  MDDTest_2a |>
+  mutate(MDDDate = as.Date(MDDDate))
+MDDTest_2a <- 
+  MDDTest_2a |>
+  mutate(IPSD = as.Date(IPSD))
+MDDTest_2a <-
+  MDDTest_2a |>
+  mutate(AdmitDate = as.Date(AdmitDate))
+MDDTest_2a <- 
+  MDDTest_2a |>
+  mutate(DischargeDate = as.Date(DischargeDate))
+
+# Perform calculations of time difference
+MDDTest_2a <- 
+  MDDTest_2a |>
+  mutate(Admit_TimeDiff = as.numeric(IPSD - AdmitDate))
+
+MDDTest_2a <- 
+  MDDTest_2a |>
+  mutate(Discharge_TimeDiff = as.numeric(IPSD - DischargeDate))
+
+# Test for admit and/or discharge date that is less than 60 days from the date of the IPSD
+MDDTest_2a <- 
+  MDDTest_2a |> 
+  mutate(MDDTest_AdmitDate = if_else(Admit_TimeDiff > -60 & Admit_TimeDiff < 60, 1, 0))
+
+MDDTest_2a <- 
+  MDDTest_2a |> 
+  mutate(MDDTest_DischargeDate = if_else(Discharge_TimeDiff > -60 & Discharge_TimeDiff < 60, 1, 0))
+
+# Calculate the MDDTest_2aResult column
+MDDTest_2a$MDDTest_2aResult <- 
+  ifelse(MDDTest_2a$MDDTest_2a > 0 &
+    (MDDTest_2a$MDDTest_AdmitDate > 0 | MDDTest_2a$MDDTest_DischargeDate < 0), 1, 0
+  )
+  
+# Select variables for analysis
+MDDTest_ResultFinal_2a <-
+  MDDTest_2a |> 
+  select(
+    PrimaryID,
+    IPSD,
+    MDDDate,
+    PrimaryID,
+    Svccode,
+    Placesvc,
+    AdmitDate,
+    DischargeDate,
+    MDDTest_2aResult
+  )
 ```
 
 
