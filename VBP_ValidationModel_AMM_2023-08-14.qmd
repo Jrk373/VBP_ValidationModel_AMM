@@ -39,6 +39,7 @@ library(RODBC)
 library(DBI)
 library(odbc)
 library(dbplyr)
+library(data.table)
 
 # Create table for inline code
 InLineCode <- data.frame(
@@ -187,12 +188,16 @@ AllianceEnrolledMembers <-
 
 # Antidepressant Medication List
 
-# Filter the dataframe for "Antidepressant Medications"
+# Filter the MyHEDIS2023_MedicationDirectory for "Antidepressant Medications"
 AntidepressantMedications <- MyHEDIS2023_MedicationDirectory |> 
   filter(`Medication List Name` == "Antidepressant Medications")
 
 # Extract the associated code values as a vector
 AntidepressantMedicationList <- AntidepressantMedications$Code
+```
+
+```{r}
+# Index Prescription Start Date
 
 # Filter the Claims for only antidepressant medications
 IPSD <-
@@ -223,4 +228,181 @@ Step1_IPSD <-
 # write.csv(IPSD, "./data/output/IndexPrescStartDate.csv")
 
 ```
+
+# Step 2: Required Exclusions
+
+Members who did not have an encounter with a diagnosis of major depression during the 121-day period from 60 days prior to the IPSD, through the IPSD and the 60 days after the IPSD. 
+
+```{r}
+# Major Depressive Disorder Diagnosis Codes
+
+MDD_DiagnosisCodes <- 
+MyHEDIS2023_AllValueSetsToCodes |> 
+  filter(`Value Set Name` == "Major Depression")
+  
+# Extract the associated code values as a vector
+MDD_DiagnosisCodesList <- MDD_DiagnosisCodes$Code
+
+```
+
+
+```{r}
+
+# Isolate only claims with an MDD Dx
+
+# Filter the All HCA claims for Alliance members only
+AllianceEnrolledMembersList <- AllianceEnrolledMembers$PrimaryId
+
+Claims_AllAlliance <-
+  Claims_AllHCA |> 
+  filter(PrimaryID %in% AllianceEnrolledMembersList)
+
+# Select variables for analysis
+MDDTest <-
+  Claims_AllAlliance |> 
+  select(
+    ClaimLine,
+    PrimaryID,
+    BegDate,
+    Svccode,
+    MedicationNDC,
+    Placesvc,
+    PrimaryDiagnosis,
+    Dx1, Dx2, DX3, Dx4, Dx5, DX6, Dx7, Dx8, DX9, Dx10, Dx11, DX12,
+    AdmitDate,
+    DischargeDate
+    )
+
+# Search for primary diagnosis of MDDDx
+MDDTest <- 
+  MDDTest |> 
+  mutate(MDDxTest_PrimaryDiagnosis = if_else(PrimaryDiagnosis %in% MDD_DiagnosisCodesList, 1, 0))
+
+# Search for subsequent diagnosis of MDDDx
+
+# Convert the dataframe to a data.table
+MDDTest <- as.data.table(MDDTest)
+
+# Iterate through the diagnosis columns and create new columns
+for (col in grep("^Dx", names(MDDTest), value = TRUE)) {
+  MDDTest[, paste0("MDDDxTest_", col) := as.integer(.SD[[col]] %in% MDD_DiagnosisCodesList)]
+  MDDTest[, paste0("MDDDx_", col) := fifelse(.SD[[col]] %in% MDD_DiagnosisCodesList, .SD[[col]], NA_character_)]
+}
+
+# Create a new column MDDxTestPrimaryDx
+MDDTest <-
+  MDDTest |> 
+  mutate(MDDxTestPrimaryDx = if_else(MDDxTest_PrimaryDiagnosis > 0, 1, 0))
+
+# Create a new column MDDxTestDxAll
+MDDTest[, MDDxTestDxAll := as.integer(rowSums(.SD) > 0), .SDcols = patterns("^MDDDxTest_")]
+
+MDDTest <-
+  MDDTest |> 
+  mutate(MDDxTest_Final = if_else(MDDxTestPrimaryDx > 0 | MDDxTestDxAll > 0, 1, 0))
+
+MDDTest_Final <-
+  MDDTest |> 
+  select(
+    ClaimLine,
+    PrimaryID,
+    BegDate,
+    Svccode,
+    MedicationNDC,
+    Placesvc,
+    AdmitDate,
+    DischargeDate,
+    MDDxTest_Final
+  ) |> 
+  filter(MDDxTest_Final > 0)
+
+
+
+## Write CSV
+# write.csv(MDDTest_Final, "./data/output/MDDxTest.csv")
+```
+
+```{r}
+
+# Set the allowed time difference in days
+allowed_time_difference <- 60
+
+# Convert IPSD and BegDate to Date type
+Step1_IPSD <- Step1_IPSD %>%
+  mutate(IPSD = as.Date(IPSD))
+MDDTest_Final <- MDDTest_Final %>%
+  mutate(BegDate = as.Date(BegDate))
+
+# Perform the comparison and calculations using dplyr
+MDDTest_Result <- Step1_IPSD %>%
+  inner_join(MDDTest_Final, by = "PrimaryID") %>%
+  mutate(TimeDiff = as.numeric(BegDate - IPSD))
+
+MDDTest_Result <- MDDTest_Result |> 
+  mutate(MDDxTest_PrePost = if_else(TimeDiff > -60 & TimeDiff < 60, 1, 0)) |> 
+  rename("MDDDate" = BegDate)
+
+MDDTest_ResultFinal <- MDDTest_Result |> 
+  filter(MDDxTest_PrePost > 0) |> 
+  select(
+    PrimaryID,
+    IPSD,
+    MDDDate,
+    PrimaryID,
+    Svccode,
+    Placesvc,
+    AdmitDate,
+    DischargeDate
+  )
+
+## Write to CSV
+# write.csv(MDDTest_ResultFinal, "./data/output/MDDxTest_FinalResult.csv")
+
+```
+
+
+
+Members who meet any of the following criteria remain in the eligible population:
+
+Step 2a:
+
+An acute or nonacute inpatient stay with any diagnosis of major depression (Major Depression Value Set) on the discharge claim. To identify acute and nonacute inpatient stays:
+
+  1.    Identify all acute and nonacute inpatient stays (Inpatient Stay Value Set).
+  2.    Identify the admission and discharge dates for the stay. Either an admission or discharge during the required time frame meets criteria.
+  
+```{r}
+# Extract the inpatient value set
+
+InpatientValueSetCodes <- 
+MyHEDIS2023_AllValueSetsToCodes |> 
+  filter(`Value Set Name` == "Inpatient Stay")
+  
+# Extract the associated code values as a vector
+InpatientValueSetCodesList <- InpatientValueSetCodes$Code
+
+```
+
+```{r}
+
+MDDTest_ResultFinal_2a <-
+  MDDTest_ResultFinal |> 
+  filter(Svccode %in% InpatientValueSetCodesList)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
