@@ -1377,6 +1377,7 @@ AllianceEnrolledMembers_CE <-
         y = pivoted_data,
         by = "PrimaryID",
         all.x = TRUE)
+<<<<<<< HEAD
 
 # Replace the date cutoff
 cutoff_date <- as.Date("2022-01-16")
@@ -1407,9 +1408,19 @@ for (i in 1:38) {
 
 # Reorder the columns
 AllianceEnrolledMembers_CE <- AllianceEnrolledMembers_CE[, ..new_column_order]
+=======
+>>>>>>> 38d4a495edc6f1e91efd37f9905acbb8bd21454d
 
 
 ```
 
 
 
+<<<<<<< HEAD
+=======
+
+
+
+
+
+>>>>>>> 38d4a495edc6f1e91efd37f9905acbb8bd21454d
