@@ -1232,6 +1232,184 @@ Step2_MDD <-
 #| warning: false
 #| error: false
 
+# Convert data frames to data tables
+setDT(Step2_MDD)
+setDT(Claims_AllAlliance)
+
+# Filter Claims_AllAlliance to include only rows where MedicationNDC is not NA
+NMH_filtered_claims <- Claims_AllAlliance[!is.na(MedicationNDC)]
+
+NMH_filtered_claims <-
+  NMH_filtered_claims |> 
+  select(
+    PrimaryID,
+    Icnno,
+    Svccode,
+    BegDate,
+    MedicationNDC
+  )
+
+# Merge Step2_MDD with NMH_filtered_claims by PrimaryID using by=.EACHI
+NMH_merged_data <- Step2_MDD[NMH_filtered_claims, on = "PrimaryID", nomatch = 0, allow.cartesian = TRUE]
+
+# Calculate the difference in days between IPSDate and begDate
+NMH_merged_data[, DaysDifference := as.numeric(difftime(IPSDate, BegDate, units = "days"))]
+
+# Filter Days difference greater than 105
+
+NMH_merged_data <- 
+  NMH_merged_data |> 
+  select(
+    PrimaryID,
+    Icnno.x,
+    IPSDate,
+    IPSD_ID,
+    MDDDate,
+    MDD_ID,
+    AdmitDate,
+    DischargeDate,
+    Svccode,
+    Placesvc,
+    Icnno,
+    BegDate,
+    MedicationNDC,
+    DaysDifference
+  ) |> 
+  filter(DaysDifference > 105)
+
+NMH_merged_data <-
+  NMH_merged_data |> 
+  rename("NMHDate" = BegDate,
+         "IPSDClaimID" = Icnno.x,
+         "NMHClaimID" = Icnno)
+  
+# Select variables for analysis
+
+Step3_NMH <-
+  NMH_merged_data |> 
+  select(
+    PrimaryID,
+    IPSDClaimID,
+    IPSDate,
+    IPSD_ID,
+    MDDDate,
+    MDD_ID,
+    NMHClaimID,
+    NMHDate
+  )
+```
+
+# Step 4: Continuous Enrollment
+
+Calculate continuous enrollment. Members must be continuously enrolled for 105 days prior to the IPSD to 231 days after the IPSD.
+
+```{r}
+#| label: Distinct Member List
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+# Convert Step3_NMH to a data table
+setDT(Step3_NMH)
+
+# Convert IPSDDate to date format if it's not already
+Step3_NMH[, IPSDDate := as.Date(IPSDate)]
+
+# Select the specified columns and calculate the minimum IPSDDate for each PrimaryID
+DistinctMemberList <- Step3_NMH[, .(IPSDClaimID, IPSDDate, IPSD_ID), by = PrimaryID][order(IPSDDate), .SD[1], by = PrimaryID]
+
+```
+
+```{r}
+#| label: Merge Enrollment Data
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+AllianceEnrolledMembers_CE <-
+  AllianceEnrolledMembers |> 
+  rename("PrimaryID" = PrimaryId,
+         "EnrollmentDate" = EnrollmentDate.x,
+         "DisenrollmentDate" = DisenrollmentDate.x)
+
+# Pivot the date to house all enrollment segments on one line
+
+# Convert AllianceEnrolledMembers_CE to a data table
+setDT(AllianceEnrolledMembers_CE)
+
+# Add a row identifier to help with the reshaping
+AllianceEnrolledMembers_CE[, RowID := 1:.N, by = PrimaryID]
+
+# Reshape the data using dcast
+pivoted_data <- dcast(
+  AllianceEnrolledMembers_CE,
+  PrimaryID ~ RowID,
+  value.var = c("EnrollmentDate", "DisenrollmentDate")
+)
+
+# Rename the columns
+colnames(pivoted_data) <- sub("^V", "", colnames(pivoted_data))
+
+# Calculate the number of pairs of EnrollmentDate and DisenrollmentDate columns
+num_pairs <- (ncol(pivoted_data) - 1) / 2
+
+
+# Define the column order
+new_column_order <- c("PrimaryID")
+for (i in 1:38) {
+  new_column_order <- c(new_column_order, 
+                        paste0("EnrollmentDate_", i), 
+                        paste0("DisenrollmentDate_", i))
+}
+
+# Reorder the columns
+pivoted_data <- pivoted_data[, ..new_column_order]
+
+# Replace "6868" with NA in all columns
+pivoted_data[pivoted_data == "6868"] <- NA
+
+AllianceEnrolledMembers_CE <-
+  merge(x = DistinctMemberList,
+        y = pivoted_data,
+        by = "PrimaryID",
+        all.x = TRUE)
+
+# Replace the date cutoff
+cutoff_date <- as.Date("2022-01-16")
+
+# Iterate through each pair and update the values
+AllianceEnrolledMembers_CE <- AllianceEnrolledMembers_CE %>%
+  mutate(across(starts_with("EnrollmentDate_"), ~ ifelse(
+    get(paste0("DisenrollmentDate_", sub("EnrollmentDate_", "", cur_column()))) < cutoff_date,
+    NA,
+    .), .names = "new_{.col}")) %>%
+  mutate(across(starts_with("DisenrollmentDate_"), ~ ifelse(
+    . < cutoff_date,
+    NA,
+    .), .names = "new_{.col}")) %>%
+  select(-starts_with("EnrollmentDate_"), -starts_with("DisenrollmentDate_")) %>%
+  rename_with(~ sub("new_", "", .), starts_with("new_"))
+
+# Define the column order
+new_column_order <- c("PrimaryID",
+                      "IPSDClaimID",
+                      "IPSDDate",
+                      "IPSD_ID")
+for (i in 1:38) {
+  new_column_order <- c(new_column_order, 
+                        paste0("EnrollmentDate_", i), 
+                        paste0("DisenrollmentDate_", i))
+}
+
+# Reorder the columns
+AllianceEnrolledMembers_CE <- AllianceEnrolledMembers_CE[, ..new_column_order]
 
 
 ```
+
+
+
