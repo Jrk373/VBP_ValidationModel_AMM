@@ -74,8 +74,16 @@ NAZ_Counties <- (c("Apache", "Coconino", "Mohave", "Navajo", "Yavapai"))
 # Pre-Load Data
 
 ```{r}
+#| label: Pre-Load Data
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+
 # Enrollments
-Enrollments_AllACC <- read.csv("./data/input/Enrollments_AllACC.csv")
+GM_Enrollments_AllACC <- read.csv("./data/input/Enrollments_AllACC.csv")
 GM_ALLAZ_Enrollments <- read.csv("./data/input/GM_AllAZ_Enrollments.csv")
 GM_ALLAZ_Addresses <- read.csv("./data/input/GM_AllAZ_Addresses.csv")
 GM_PrimaryAssignedClinic <- read.csv("./data/input/GM_PrimaryAssignedClinic.csv")
@@ -99,19 +107,27 @@ AllTheVariables <- read.csv("./data/input/AllTheVariables.csv")
 
 ```
 
-# Step 1
+# Step 1: Index Prescription Start Date
 
 Determine the IPSDate. Identify the date of the earliest dispensing event for an antidepressant medication (Antidepressant Medications List) during the intake period.
 
 ## Determine Alliance Enrollment
 
 ```{r}
+#| label: Enrollment
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+
 # Identify Alliance Membership
 
 #Merge Enrollment files
 
 AllianceEnrolledMembers_Merge <-
-  merge(x = Enrollments_AllACC,
+  merge(x = GM_Enrollments_AllACC,
         y = Clients_Demographics_AllACC,
         by = "PrimaryId",
         all.x = TRUE)
@@ -190,6 +206,12 @@ AllianceEnrolledMembers <-
 ## Isolate Antidepressant medication list
 
 ```{r}
+#| label: Antidepressant medication list
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Antidepressant Medication List
 
@@ -204,6 +226,13 @@ AntidepressantMedicationList <- AntidepressantMedications$Code
 ## Select eligible medication claims for eligible Aliiance members
 
 ```{r}
+#| label: Eligibel Claims
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
 # Index Prescription Start Date
 
 # Filter the Claims for only antidepressant medications
@@ -260,6 +289,14 @@ Step1_IPSD$IPSD_ID <- sapply(1:nrow(Step1_IPSD), generate_unique_random, existin
 Exclusion: Members who did not have an encounter with a diagnosis of major depression during the 121-day period from 60 days prior to the IPSDate, through the IPSDate and the 60 days after the IPSDate. 
 
 ```{r}
+#| label: Step 2 Required Exclusions
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+
 # Major Depressive Disorder Diagnosis Codes
 
 MDD_DiagnosisCodes <- 
@@ -273,6 +310,12 @@ MDD_DiagnosisCodesList <- MDD_DiagnosisCodes$Code
 
 
 ```{r}
+#| label: Step2 Required Exclusions 2
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Isolate only claims with an MDD Dx
 
@@ -363,6 +406,12 @@ MDDTest_Final <-
 ```
 
 ```{r}
+#| label: IPSD
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Convert IPSDate and BegDate to Date type
 Step1_IPSD <- Step1_IPSD |>
@@ -408,6 +457,14 @@ An acute or nonacute inpatient stay with any diagnosis of major depression (Majo
   2.    Identify the admission and discharge dates for the stay. Either an admission or discharge during the required time frame meets criteria.
   
 ```{r}
+#| label: Value Set 1
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+
 # Extract the inpatient value set
 
 InpatientValueSetCodes <- 
@@ -420,6 +477,12 @@ InpatientValueSetCodesList <- InpatientValueSetCodes$Code
 ```
 
 ```{r}
+#| label: MDD Test
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Determine if there is a valid "inpatient stay" code
 MDDTest_2a <-
@@ -487,6 +550,12 @@ MDDTest_ResultFinal_2a <-
 An acute inpatient encounter with any diagnosis of major depression: Acute Inpatient Value Set with Major Depression Value Set.
 
 ```{r}
+#| label: Value set 2b
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the inpatient value set
 
@@ -500,6 +569,12 @@ ValueSetCodesList_AcuteInpatient <- ValueSetCodes_AcuteInpatient$Code
 ```
 
 ```{r}
+#| label: Step 2b Acute Inpatient
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2b <-
   MDDTest_ResultFinal_2a |> 
@@ -512,6 +587,12 @@ MDDTest_ResultFinal_2b <-
 A nonacute inpatient encounter with any diagnosis of major depression: Nonacute Inpatient Value Set with Major Depression Value Set.
 
 ```{r}
+#| label: Value set 2c
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the inpatient value set
 
@@ -525,6 +606,12 @@ ValueSetCodesList_NonAcuteInpatient <- ValueSetCodes_NonAcuteInpatient$Code
 ```
 
 ```{r}
+#| label: Step 2c
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2c <-
   MDDTest_ResultFinal_2b |> 
@@ -537,6 +624,12 @@ MDDTest_ResultFinal_2c <-
 An outpatient visit with any diagnosis of major depression: Visit Setting Unspecified Value Set with Outpatient POS Value Set with Major Depression Value Set.
 
 ```{r}
+#| label: Value set 2d
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the value set
 
@@ -559,6 +652,12 @@ ValueSetCodesList_OutpatientPOS <- ValueSetCodes_OutpatientPOS$Code
 ```
 
 ```{r}
+#| label: Step 2d Outpatient
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2d <-
   MDDTest_ResultFinal_2c |> 
@@ -572,6 +671,12 @@ MDDTest_ResultFinal_2d <-
 An outpatient visit with any diagnosis of major depression: BH Outpatient Value Set with Major Depression Value Set.
 
 ```{r}
+#| label: Value set 2e
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the inpatient value set
 
@@ -585,6 +690,12 @@ ValueSetCodesList_BHOutpatient <- ValueSetCodes_BHOutpatient$Code
 ```
 
 ```{r}
+#| label: Step 2e: BH Outpatient
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2e <-
   MDDTest_ResultFinal_2d |> 
@@ -597,6 +708,12 @@ MDDTest_ResultFinal_2e <-
 An intensive outpatient encounter or partial hospitalization with any diagnosis of major depression: Visit Setting Unspecified Value Set with Partial Hospitalization POS Value Set with Major Depression Value Set.
 
 ```{r}
+#| label: Value set 2f
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the inpatient value set
 
@@ -610,6 +727,12 @@ ValueSetCodesList_PartialHospitalizationPOS <- ValueSetCodes_PartialHospitalizat
 ```
 
 ```{r}
+#| label: Step 2f: IOP POS
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2f <-
   MDDTest_ResultFinal_2e |> 
@@ -623,6 +746,12 @@ MDDTest_ResultFinal_2f <-
 An intensive outpatient encounter or partial hospitalization with any diagnosis of major depression: Partial Hospitalization or Intensive Outpatient Value Set with Major Depression Value Set.
 
 ```{r}
+#| label: Value set 2g
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the value set
 
@@ -636,6 +765,12 @@ ValueSetCodesList_PartialHospitalizationOrIntensiveOutpatient <- ValueSetCodes_P
 ```
 
 ```{r}
+#| label: Step 2g IOP
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2g <-
   MDDTest_ResultFinal_2f |> 
@@ -648,6 +783,12 @@ MDDTest_ResultFinal_2g <-
 A community mental health center visit with any diagnosis of major depression: Visit Setting Unspecified Value Set with Community Mental Health Center POS Value Set with Major Depression Value Set.
 
 ```{r}
+#| label: Value set 2h
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the value set
 
@@ -661,6 +802,12 @@ ValueSetCodesList_CommunityMentalHealthCenterPOS <- ValueSetCodes_CommunityMenta
 ```
 
 ```{r}
+#| label: Step 2h: CMHS
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2h <-
   MDDTest_ResultFinal_2g |> 
@@ -674,6 +821,12 @@ MDDTest_ResultFinal_2h <-
 Electroconvulsive therapy with any diagnosis of major depression: Electroconvulsive Therapy Value Set with Major Depression Value Set.
 
 ```{r}
+#| label: Value set 2i
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the value set
 
@@ -687,6 +840,12 @@ ValueSetCodesList_ElectroconvulsiveTherapy <- ValueSetCodes_ElectroconvulsiveThe
 ```
 
 ```{r}
+#| label: Step 2i: ECT
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2i <-
   MDDTest_ResultFinal_2h |> 
@@ -699,6 +858,12 @@ MDDTest_ResultFinal_2i <-
 A transcranial magnetic stimulation visit with any diagnosis of major depression: Transcranial Magnetic Stimulation Value Set with Major Depression Value Set.
 
 ```{r}
+#| label: Value set 2j
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the value set
 
@@ -712,6 +877,12 @@ ValueSetCodesList_TranscranialMagneticStimulation <- ValueSetCodes_TranscranialM
 ```
 
 ```{r}
+#| label: Step 2j: TMS
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2j <-
   MDDTest_ResultFinal_2i |> 
@@ -724,6 +895,12 @@ MDDTest_ResultFinal_2j <-
 A telehealth visit with any diagnosis of major depression: Visit Setting Unspecified Value Set with Telehealth POS Value Set with Major Depression Value Set.
 
 ```{r}
+#| label: Value set 2k
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the value set
 
@@ -737,6 +914,12 @@ ValueSetCodesList_TelehealthPOS <- ValueSetCodes_TelehealthPOS$Code
 ```
 
 ```{r}
+#| label: Step 2k: Telehealth POS
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2k <-
   MDDTest_ResultFinal_2j |> 
@@ -750,6 +933,12 @@ MDDTest_ResultFinal_2k <-
 An observation visit (Observation Value Set) with any diagnosis of major depression (Major Depression Value Set).
 
 ```{r}
+#| label: Value set 2l
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the value set
 
@@ -763,6 +952,12 @@ ValueSetCodesList_Observation <- ValueSetCodes_Observation$Code
 ```
 
 ```{r}
+#| label: Step 2l: Observation
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2l <-
   MDDTest_ResultFinal_2k |> 
@@ -775,6 +970,12 @@ MDDTest_ResultFinal_2l <-
 An ED visit (ED Value Set) with any diagnosis of major depression (Major Depression Value Set).
 
 ```{r}
+#| label: Value set 2m
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the value set
 
@@ -788,6 +989,12 @@ ValueSetCodesList_ED <- ValueSetCodes_ED$Code
 ```
 
 ```{r}
+#| label: Step 2m: ED
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2m <-
   MDDTest_ResultFinal_2l |> 
@@ -800,6 +1007,12 @@ MDDTest_ResultFinal_2m <-
 An ED visit with any diagnosis of major depression: Visit Setting Unspecified Value Set with ED POS Value Set with Major Depression Value Set.
 
 ```{r}
+#| label: Value set 2n
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the value set
 
@@ -813,6 +1026,12 @@ ValueSetCodesList_EDPOS <- ValueSetCodes_EDPOS$Code
 ```
 
 ```{r}
+#| label: Step 2n: ED POS
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2n <-
   MDDTest_ResultFinal_2m |> 
@@ -826,6 +1045,12 @@ MDDTest_ResultFinal_2n <-
 A telephone visit (Telephone Visits Value Set) with any diagnosis of major depression (Major Depression Value Set).
 
 ```{r}
+#| label: Value set 2o
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the value set
 
@@ -839,6 +1064,12 @@ ValueSetCodesList_TelephoneVisits <- ValueSetCodes_TelephoneVisits$Code
 ```
 
 ```{r}
+#| label: Step 2o: Telephone visits
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2o <-
   MDDTest_ResultFinal_2n |> 
@@ -851,6 +1082,12 @@ MDDTest_ResultFinal_2o <-
 An e-visit or virtual check-in (Online Assessments Value Set) with any diagnosis of major depression (Major Depression Value Set).
 
 ```{r}
+#| label: Value set 2p
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the value set
 
@@ -864,6 +1101,12 @@ ValueSetCodesList_OnlineAssessments <- ValueSetCodes_OnlineAssessments$Code
 ```
 
 ```{r}
+#| label: Step 2p: Online Assessment
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 MDDTest_ResultFinal_2p <-
   MDDTest_ResultFinal_2o |> 
@@ -878,6 +1121,12 @@ Exclusion: Members in hospice or using hospice services any time during the meas
 There are no members with hospice services
 
 ```{r}
+#| label: Value set 2q
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 # Extract the value set
 
@@ -900,6 +1149,12 @@ ValueSetCodesList_HospiceIntervention <- ValueSetCodes_HospiceIntervention$Code
 ```
 
 ```{r}
+#| label: Step 2q: Hospice
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 
 #From the original Claims_AllAlliance
 
@@ -923,11 +1178,17 @@ Members who died any time during the measurement year. Refer to General Guidelin
 
 All deceased members were already excluded from the member enrollment roster created before
 
-## Step 2s: Wrpping up Step 2
+## Step 2: Wrapping up
 
 The MDDTest results are scanned and all cases meeting at least 1 criteria, who did not receive hospice, and who are not deceased, are selected for further evaluation.
 
 ```{r}
+#| label: Step 2 Wrap Up
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
 # Scan all test results and sum up findings
 # Assuming your data frame is named 'df'
 
@@ -961,4 +1222,16 @@ Step2_MDD <-
 
 ```
 
+# Step 3: Negative Medication History
 
+```{r}
+#| label: Negative Medication History
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+
+
+```
