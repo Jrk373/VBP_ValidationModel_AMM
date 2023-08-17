@@ -75,18 +75,19 @@ NAZ_Counties <- (c("Apache", "Coconino", "Mohave", "Navajo", "Yavapai"))
 
 ```{r}
 # Enrollments
-Enrollments_AllACC <- read.csv("./data/output/Enrollments_AllACC.csv")
-GM_ALLAZ_Enrollments <- read.csv("./data/output/GM_AllAZ_Enrollments.csv")
-GM_ALLAZ_Addresses <- read.csv("./data/output/GM_AllAZ_Addresses.csv")
-GM_PrimaryAssignedClinic <- read.csv("./data/output/GM_PrimaryAssignedClinic.csv")
-GM_HealthHomes <- read.csv("./data/output/GM_HealthHomes.csv")
+Enrollments_AllACC <- read.csv("./data/input/Enrollments_AllACC.csv")
+GM_ALLAZ_Enrollments <- read.csv("./data/input/GM_AllAZ_Enrollments.csv")
+GM_ALLAZ_Addresses <- read.csv("./data/input/GM_AllAZ_Addresses.csv")
+GM_PrimaryAssignedClinic <- read.csv("./data/input/GM_PrimaryAssignedClinic.csv")
+GM_HealthHomes <- read.csv("./data/input/GM_HealthHomes.csv")
 
 # Demographics
-Clients_Demographics_AllACC <- read.csv("./data/output/Clients.csv")
-GM_DUGLess <- read.csv("./data/output/DUGLess.csv")
+Clients_Demographics_AllACC <- read.csv("./data/input/Clients.csv")
+GM_DUGLess <- read.csv("./data/input/DUGLess.csv")
 
 # Claims
-Claims_AllHCA <- read.csv("./data/output/Claims_AllHCA.csv")
+Claims_AllHCA <- read.csv("./data/input/Claims_AllHCA.csv")
+Claims_PBM_AllHCA <- read.csv("./data/input/Claims_PBM_AllHCA.csv")
 
 # Value Sets
 MyHEDIS2023_AllValueSetsToCodes <- read_xlsx("./documents/M. HEDIS MY 2023 Volume 2 Value Set Directory 2023-03-31 - Copy.xlsx", sheet = "Value Sets to Codes")
@@ -94,7 +95,7 @@ MyHEDIS2023_AllValueSetsToCodes <- read_xlsx("./documents/M. HEDIS MY 2023 Volum
 MyHEDIS2023_MedicationDirectory <- read_xlsx("./documents/HEDIS MY 2023 Medication List Directory 2023-03-31.xlsx", sheet = "Medication Lists to Codes")
 
 # Summary
-AllTheVariables <- read.csv("./data/AllTheVariables.csv")
+AllTheVariables <- read.csv("./data/input/AllTheVariables.csv")
 
 ```
 
@@ -226,6 +227,7 @@ Step1_IPSD <-
   filter(PrimaryID %in% AllianceEnrolledMembers$PrimaryId) |> 
   select(
     PrimaryID,
+    Icnno,
     BegDate
   ) |> 
   rename("IPSDate" = BegDate) 
@@ -287,6 +289,7 @@ MDDTest <-
   select(
     PrimaryID,
     BegDate,
+    Icnno,
     Svccode,
     MedicationNDC,
     Placesvc,
@@ -345,6 +348,7 @@ MDDTest_Final <-
   MDDTest |> 
   select(
     PrimaryID,
+    Icnno,
     BegDate,
     MDD_ID,
     AdmitDate,
@@ -379,6 +383,7 @@ MDDTest_ResultFinal <- MDDTest_Result |>
   filter(MDDxTest_PrePost > 0) |> 
   select(
     PrimaryID,
+    Icnno.x,
     IPSDate,
     IPSD_ID,
     MDDDate,
@@ -386,8 +391,7 @@ MDDTest_ResultFinal <- MDDTest_Result |>
     AdmitDate,
     DischargeDate,
     Svccode,
-    Placesvc,
-    
+    Placesvc
   )
 
 ```
@@ -465,6 +469,7 @@ MDDTest_ResultFinal_2a <-
   MDDTest_2a |> 
   select(
     PrimaryID,
+    Icnno.x,
     IPSDate,
     IPSD_ID,
     MDDDate,
@@ -940,6 +945,7 @@ Step2_MDD <-
   filter(MDDTestResultSum > 0) |> 
   select(
     PrimaryID,
+    Icnno.x,
     IPSDate,
     IPSD_ID,
     MDDDate,
@@ -951,7 +957,7 @@ Step2_MDD <-
   )
 
 ## Write to CSV
-# write.csv(Step2_MDD, "./data/output/MajorDepressiveDisorderDisgnoses.csv")
+# write.csv(Step2_MDD, "./data/output/MajorDepressiveDisorderDiagnoses.csv")
 
 ```
 
