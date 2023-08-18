@@ -1323,7 +1323,121 @@ DistinctMemberList <- Step3_NMH[, .(IPSDClaimID, IPSDDate, IPSD_ID), by = Primar
 ```
 
 ```{r}
-#| label: Merge Enrollment Data
+
+CE_Test <-
+  AllianceEnrolledMembers |> 
+  select(
+    PrimaryId,
+    EnrollmentDate.x,
+    DisenrollmentDate.x
+  )
+
+CE_Test <-
+  CE_Test |> 
+  rename("PrimaryID" = PrimaryId)
+
+CE_Test <-
+  merge(x = DistinctMemberList,
+        y = CE_Test,
+        by = "PrimaryID")
+
+# Format Enrollment Date as dates
+CE_Test$EnrollmentDate.x <- as.Date(CE_Test$EnrollmentDate.x)
+CE_Test$DisenrollmentDate.x <- as.Date(CE_Test$DisenrollmentDate.x)
+
+# Calculate difference between enrollment dates and IPSD
+CE_Test <-
+  CE_Test |> 
+  mutate(DaysDiff_Pre = EnrollmentDate.x - IPSDDate) |> 
+  mutate(DaysDiff_Post = DisenrollmentDate.x - IPSDDate)
+
+# Calculate if days difference meets criteria
+CE_Test <-
+  CE_Test |> 
+  mutate(Pre_Result = if_else(DaysDiff_Pre < -105, 1, 0)) |> 
+  mutate(Post_Result = if_else(DaysDiff_Post > 213 | is.na(DaysDiff_Post), 1, 0))
+
+```
+
+
+
+```{r}
+# Function to check if two periods are continuous
+are_periods_continuous <- function(enrollment1, disenrollment1, enrollment2, disenrollment2) {
+  if (any(is.na(c(enrollment1, disenrollment1, enrollment2, disenrollment2)))) {
+    return(FALSE)
+  }
+  return(enrollment2 <= (disenrollment1 + 1))
+}
+
+# Create a new data frame to store continuous enrollment periods
+continuous_periods <- data.frame(PrimaryID = integer(0), EnrollmentPeriod = character(0))
+
+# Iterate over each PrimaryID
+for (id in unique(AllianceEnrolledMembers_Segments$PrimaryID)) {
+  id_data <- AllianceEnrolledMembers_Segments %>% filter(PrimaryID == id)
+  
+  continuous_period <- list()
+  
+  for (i in 1:(nrow(id_data) - 1)) {
+    enrollment1 <- ifelse(is.na(id_data$EnrollmentDate.x[i]), Sys.Date(), id_data$EnrollmentDate.x[i])
+    disenrollment1 <- ifelse(is.na(id_data$DisenrollmentDate.x[i]), Sys.Date(), id_data$DisenrollmentDate.x[i])
+    enrollment2 <- ifelse(is.na(id_data$EnrollmentDate.x[i + 1]), Sys.Date(), id_data$EnrollmentDate.x[i + 1])
+    disenrollment2 <- ifelse(is.na(id_data$DisenrollmentDate.x[i + 1]), Sys.Date(), id_data$DisenrollmentDate.x[i + 1])
+    
+    if (are_periods_continuous(enrollment1, disenrollment1, enrollment2, disenrollment2)) {
+      continuous_period <- c(continuous_period, id_data$EnrollmentDate.x[i], id_data$DisenrollmentDate.x[i + 1])
+    } else {
+      if (length(continuous_period) > 0) {
+        continuous_periods <- bind_rows(continuous_periods, data.frame(PrimaryID = id, EnrollmentPeriod = paste(min(continuous_period), max(continuous_period), sep = " to ")))
+      }
+      continuous_period <- list()
+    }
+  }
+  
+  if (length(continuous_period) > 0) {
+    continuous_periods <- bind_rows(continuous_periods, data.frame(PrimaryID = id, EnrollmentPeriod = paste(min(continuous_period), max(continuous_period), sep = " to ")))
+  }
+}
+
+# Resulting data frame with continuous enrollment periods
+continuous_periods
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+#| label: Define enrollment segments
 #| eval: true
 #| include: false
 #| echo: false
@@ -1395,10 +1509,7 @@ AllianceEnrolledMembers_CE <- AllianceEnrolledMembers_CE %>%
   rename_with(~ sub("new_", "", .), starts_with("new_"))
 
 # Define the column order
-new_column_order <- c("PrimaryID",
-                      "IPSDClaimID",
-                      "IPSDDate",
-                      "IPSD_ID")
+new_column_order <- c("PrimaryID")
 for (i in 1:38) {
   new_column_order <- c(new_column_order, 
                         paste0("EnrollmentDate_", i), 
@@ -1406,9 +1517,58 @@ for (i in 1:38) {
 }
 
 # Reorder the columns
-AllianceEnrolledMembers_CE <- AllianceEnrolledMembers_CE[, ..new_column_order]
+AllianceEnrolledMembers_Segments <- AllianceEnrolledMembers_CE[, ..new_column_order]
 
 
 ```
+
+
+```{r}
+#| label: Attach Enrollment segments
+#| eval: true
+#| include: false
+#| echo: false
+#| warning: false
+#| error: false
+
+# Drop columns that start with "DisenrollmentDate"
+filtered_data <- AllianceEnrolledMembers_Segments %>%
+  select(-starts_with("DisenrollmentDate"))
+
+# Create a new column 'ConcatenatedEnrollmentDates' containing concatenated values
+filtered_data$ConcatenatedEnrollmentDates <- apply(filtered_data, 1, function(row) {
+  non_na_dates <- row[!is.na(row)]
+  if (length(non_na_dates) > 0) {
+    paste(non_na_dates, collapse = ", ")
+  } else {
+    NA
+  }
+})
+
+filtered_data <-
+  filtered_data |> 
+  select(ConcatenatedEnrollmentDates)
+
+# Split the values in the 'ConcatenatedEnrollmentDates' column into separate columns
+filtered_data <- filtered_data %>%
+  separate(
+    col = ConcatenatedEnrollmentDates,
+    into = paste0("EnrollmentDate_", 1:38),  # Adjust the number of columns as needed
+    sep = ", "
+  )
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
 
 
