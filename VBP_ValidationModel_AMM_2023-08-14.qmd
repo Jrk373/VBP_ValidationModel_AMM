@@ -1359,50 +1359,82 @@ CE_Test <-
 
 ```
 
+```{r}
+
+CE_Test1 <- CE_Test %>%
+  arrange(PrimaryID, EnrollmentDate.x) %>%
+  group_by(PrimaryID) %>%
+  mutate(
+    Next_EnrollmentDate = lead(EnrollmentDate.x),
+    Next_DisenrollmentDate = lead(DisenrollmentDate.x),
+    Match_NextDay = ifelse(Next_EnrollmentDate == DisenrollmentDate.x + 1, 1, 0)
+  ) %>%
+  ungroup() %>%
+  filter(Match_NextDay == 1)
+
+CE_Test1 <- CE_Test1 |> 
+  mutate(Next_DaysDiff_Post = Next_DisenrollmentDate - IPSDDate)
+
+CE_Test1 <- CE_Test1 |> 
+  mutate(Next_Post_Result = if_else(Next_DaysDiff_Post > 213 | is.na(Next_DaysDiff_Post), 1, 0))
+
+CE_Test1 <- CE_Test1 %>%
+  mutate(FinalSummary = if_else(
+    Pre_Result == 1 &
+    (Post_Result == 1 | is.na(Post_Result)) |
+    Next_Post_Result == 1 | is.na(Next_Post_Result),
+    1, 0)
+  )
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ```{r}
-# Function to check if two periods are continuous
-are_periods_continuous <- function(enrollment1, disenrollment1, enrollment2, disenrollment2) {
-  if (any(is.na(c(enrollment1, disenrollment1, enrollment2, disenrollment2)))) {
-    return(FALSE)
-  }
-  return(enrollment2 <= (disenrollment1 + 1))
-}
 
-# Create a new data frame to store continuous enrollment periods
-continuous_periods <- data.frame(PrimaryID = integer(0), EnrollmentPeriod = character(0))
+library(dplyr)
 
-# Iterate over each PrimaryID
-for (id in unique(AllianceEnrolledMembers_Segments$PrimaryID)) {
-  id_data <- AllianceEnrolledMembers_Segments %>% filter(PrimaryID == id)
-  
-  continuous_period <- list()
-  
-  for (i in 1:(nrow(id_data) - 1)) {
-    enrollment1 <- ifelse(is.na(id_data$EnrollmentDate.x[i]), Sys.Date(), id_data$EnrollmentDate.x[i])
-    disenrollment1 <- ifelse(is.na(id_data$DisenrollmentDate.x[i]), Sys.Date(), id_data$DisenrollmentDate.x[i])
-    enrollment2 <- ifelse(is.na(id_data$EnrollmentDate.x[i + 1]), Sys.Date(), id_data$EnrollmentDate.x[i + 1])
-    disenrollment2 <- ifelse(is.na(id_data$DisenrollmentDate.x[i + 1]), Sys.Date(), id_data$DisenrollmentDate.x[i + 1])
-    
-    if (are_periods_continuous(enrollment1, disenrollment1, enrollment2, disenrollment2)) {
-      continuous_period <- c(continuous_period, id_data$EnrollmentDate.x[i], id_data$DisenrollmentDate.x[i + 1])
-    } else {
-      if (length(continuous_period) > 0) {
-        continuous_periods <- bind_rows(continuous_periods, data.frame(PrimaryID = id, EnrollmentPeriod = paste(min(continuous_period), max(continuous_period), sep = " to ")))
-      }
-      continuous_period <- list()
-    }
-  }
-  
-  if (length(continuous_period) > 0) {
-    continuous_periods <- bind_rows(continuous_periods, data.frame(PrimaryID = id, EnrollmentPeriod = paste(min(continuous_period), max(continuous_period), sep = " to ")))
-  }
-}
+# Sort the data by PrimaryID and EnrollmentDate.x
+sorted_data <- CE_Test %>%
+  arrange(PrimaryID, EnrollmentDate.x)
 
-# Resulting data frame with continuous enrollment periods
-continuous_periods
+# Add a column "Continuous" indicating whether the periods are continuous
+sorted_data <- sorted_data %>%
+  mutate(
+    Continuous = case_when(
+      lead(EnrollmentDate.x, order_by = PrimaryID) - 1 == DisenrollmentDate.x & lag(PrimaryID) == PrimaryID ~ "1",
+      is.na(lead(EnrollmentDate.x, order_by = PrimaryID)) & lag(PrimaryID) == PrimaryID ~ "1",
+      EnrollmentDate.x <= lead(EnrollmentDate.x, order_by = PrimaryID) - 1 & lag(PrimaryID) == PrimaryID ~ "1",
+      TRUE ~ NA_character_
+    )
+  )
 
+# Display the resulting data
+sorted_data
 
 ```
 
